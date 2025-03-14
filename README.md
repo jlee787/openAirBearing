@@ -7,7 +7,6 @@ Software can be used online at https://openairbearing.com in a limited capabilit
 Supported features include:
 * Circular thrust bearings
 * Annular thrust bearings and seals
-* Infinitely long linear bearings and seals
 
 ## Mathematical modeling
 Analytical and numerical solutions to reynolds equation in one dimension for common porous gas bearing and seal geometries.
@@ -16,11 +15,12 @@ Implements models from textbooks [1,2] and research of Miettinen et al. [3,4].
 
 ## Contact
 Main developer is Mikael Miettinen from Arotor lab at Aalto University Finland.
+
 https://www.aalto.fi/en/department-of-energy-and-mechanical-engineering/aalto-arotor-lab
 
 For any questions regarding the software please contact mikael.miettinen@aalto.fi
 
-## References
+### References
 [1] V. N. Constantinescu, Gas Lubrication, American Society of Mechanical Engineers, 1969. URL: https://archive.org/details/gaslubrication0000cons/
 
 [2] F. Al-Bender, Air Bearings - Theory, Design and Applications, John Wiley &Sons, 2021. doi: https://doi.org/10.1002/9781118926444
