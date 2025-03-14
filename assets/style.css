@@ -1,0 +1,98 @@
+/* @font-face {
+    font-family: 'Computer Modern';
+    src: url('https://cdn.jsdelivr.net/gh/schurterb/fonts/cmunrm.woff') format('woff');
+} */
+
+* {
+    font-family: Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: Arial, sans-serif;
+}
+
+.dash-input, .dash-dropdown {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Add proper favicon rules */
+link[rel="shortcut icon"] {
+    width: 32px;
+    height: 32px;
+}
+
+/* Comprehensive input styling */
+input[type="number"] {
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    appearance: textfield;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Remove validation styling */
+input:invalid,
+input[type="number"]:invalid {
+    outline: none !important;
+    border-color: #ddd !important;
+    box-shadow: none !important;
+}
+
+/* Focus state */
+input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+/* HTML Template Styling */
+/* html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+} */
+
+body {
+    height: 100%;
+    margin: 0;
+    padding: 20px;
+    background-color: #ffffff;
+}
+
+@media screen and (max-width: 1200px) {
+    /* Stack columns on smaller screens */
+    .dash-input-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    /* Make plot container full width */
+    .dash-plot-container {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+}
+
+/* Footer styling */
+footer {
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Container styling */
+#react-entry-point {
+    height: 100%;
+}
+
+.dash-debug-menu {
+    display: none; /* Hide debug menu in production */
+}
