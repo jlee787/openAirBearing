@@ -434,9 +434,13 @@ def build_diff_matrix(coef: np.ndarray, eps: np.ndarray, dr: np.ndarray) -> sp.c
     diag_lower[:-1] = eps_half[:-1] / dr[1:-1]**2
 
     # Assemble sparse matrix
-    L_mat = coef @ sp.diags([diag_lower, diag_main, diag_upper], [-1, 0, 1], format="csr")
+    L_mat = sp.diags([diag_lower, diag_main, diag_upper], [-1, 0, 1], format="csr")
 
-    return L_mat
+    # Handle also scalar coefficients
+    if isinstance(coef, (float, int)):
+        return coef * L_mat
+    else:
+        return coef @ L_mat
 
 
 if __name__ == "__main__":

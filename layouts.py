@@ -216,21 +216,6 @@ def create_input_layout(default_bearing):
                 title='Reset to default',
                 style=STYLES['reset_button']
             ),
-
-            # html.Label("Concavity (μm)"),
-            #     dcc.Input(
-            #         id='c-input',
-            #         type='number',
-            #         step=0.5,
-            #         value=default_bearing.c*1e6,
-            #         style=STYLES['input']
-            #     ),
-            #     html.Button(
-            #         '↺',
-            #         id='c-reset',
-            #         title='Reset to default',
-            #         style=STYLES['reset_button']
-            # ),
         ], style=STYLES['input_container']),
 
                 # Geometry inputs
@@ -265,7 +250,6 @@ def create_input_layout(default_bearing):
                     title='Reset to default',
                     style=STYLES['reset_button']
             ),
-
         ], style=STYLES['input_container']),
         
         html.H4("Load parameters"),
