@@ -2,7 +2,7 @@
 
 ## Introduciton
 OpenAirbearing includes a backed to model porous bearing performance and a browser GUI to display the results.
-Software can be used online at https://openairbearing.com in a limited capability, and in full capability when used locally.
+Software can be used online at https://www.openairbearing.com in a limited capability, and in full capability when used locally.
 
 Supported features include:
 * Circular thrust bearings
