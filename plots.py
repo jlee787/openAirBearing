@@ -12,7 +12,6 @@ PLOT_FONT = dict(
 SOLVER_COLORS = {
     'Analytic': 'blue',
     'Numeric': 'red',
-    'Numeric 2': 'green'
 }
 
 # Common axis properties
@@ -94,12 +93,14 @@ def plot_key_results(bearing, results):
             pressures = (result.p[:, in_h] - bearing.pa) * 1e-6  # Convert to MPa
             fig.add_trace(
                 go.Scatter(
-                    x=bearing.r * 1e3, y=pressures,
+                    x=bearing.r * 1e3,
+                    y=pressures,
                     mode='lines+text',
                     textposition='top center',
                     text=[f"{h_plot*1e6:.2f} μm" if i == t_loc else None for i in range(bearing.nr)],
                     textfont=dict(color=color),
-                    name=f"{result.name} {h_plot*1e6:.1f} μm", line=dict(color=color),
+                    name=f"{result.name} {h_plot*1e6:.1f} μm",
+                    line=dict(color=color),
                     showlegend=False
                 ),
                 row=1, col=3
@@ -183,8 +184,8 @@ def plot_key_results(bearing, results):
     fig.update_yaxes(title_text="k (N/μm)", range=[k_min*1e-6, None], row=1, col=2)
     fig.update_yaxes(title_text="p (MPa)", range=[0, None], row=1, col=3)
 
-    fig.update_yaxes(title_text="q<sub>s/sub> (l/min)", range=[0, None], row=2, col=1)
-    #fig.update_yaxes(title_text="q<sub>c</sub> (l/min)", range=[None, 0], row=2, col=2)
+    fig.update_yaxes(title_text="q<sub>s</sub> (l/min)", range=[0, None], row=2, col=1)
+    fig.update_yaxes(title_text="q<sub>c</sub> (l/min)", range=[None, 0], row=2, col=2)
     fig.update_yaxes(title_text="q<sub>a</sub> (l/min)", range=[0, None], row=2, col=3)
 
     # Update layout
@@ -242,7 +243,6 @@ def plot_bearing_shape(bearing):
         if bearing.case == "annular":
             xc = bearing.rc * np.cos(theta) * 1e3
             yc = bearing.rc * np.sin(theta) * 1e3
-        
             fig.add_trace(
                 go.Scatter(
                     x=xc,
@@ -289,7 +289,6 @@ def plot_bearing_shape(bearing):
             range=np.array([-0.5, 1.5]) * bearing.ra * 1e3,
         )
 
-
     fig.update_xaxes( 
         title="x (mm)",
         showline=True,
@@ -298,7 +297,6 @@ def plot_bearing_shape(bearing):
         row=1,
         col=1
     )
-   
     fig.update_yaxes(
         title="y (mm)",
         showline=True,
@@ -310,25 +308,12 @@ def plot_bearing_shape(bearing):
         col=1
     )
 
-    fig.add_trace(
-        go.Scatter(
-            x=np.array([bearing.r[1] * 1e3, bearing.r[-1] * 1e3]),  # Convert to mm
-            y=np.array([100, 100]),
-            line=dict(color='black'),
-            showlegend=False
-        ),
-        row=1, col=2
-    )
-
-
     # PROFILE XZ
     fig.add_trace(
         go.Scatter(
-            x=bearing.r * 1e3,  # Convert to mm
-            y=bearing.geom * 1e6,  # Convert to um
-            fill='tonexty',
-            # fillcolor='rgba(255, 200, 200, 0.5)',
-            # line=dict(color='red'),
+            x=np.concatenate(([bearing.r[1]], bearing.r, [bearing.r[-1]])) * 1e3,  # Convert to mm
+            y=np.concatenate(([100], bearing.geom, [100])) * 1e6,  # Convert to um
+            fill='toself',
             fillcolor='lightgrey',
             line=dict(color='black'),
             name='Shape',
@@ -340,17 +325,6 @@ def plot_bearing_shape(bearing):
     for i in range(1, 3):
         fig.update_xaxes(AXIS_STYLE, row=i, col=1)
 
-
-    fig.update_yaxes(
-        title="Shape (μm)",
-        showline=True,
-        linecolor='black',
-        mirror=True,
-        range=[min(bearing.geom) * 1.2 * 1e6, max(bearing.geom) * 1.2 * 1e6],
-        row=1,
-        col=2
-    )
-
     fig.update_xaxes( 
         title="r (mm)",
         showline=True,
@@ -360,7 +334,16 @@ def plot_bearing_shape(bearing):
         row=1,
         col=2
     )
-
+    fig.update_yaxes(
+        title="Shape (μm)",
+        showline=True,
+        linecolor='black',
+        mirror=True,
+        range=[min(bearing.geom) * 1.2 * 1e6, max(bearing.geom) * 1.2 * 1e6],
+        row=1,
+        col=2
+    )
+    
     fig.update_layout(
         font=PLOT_FONT,
         height=300,

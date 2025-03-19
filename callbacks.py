@@ -41,7 +41,8 @@ def register_callbacks(app):
             Input('ha-n-input', 'value'),
             Input('kappa-input', 'value'),
             Input('Qsc-input', 'value'),
-            Input('c-input', 'value'),
+            Input('error-select', 'value'),
+            Input('error-input', 'value'),
             Input('psi-input', 'value')
 
         ],
@@ -49,7 +50,7 @@ def register_callbacks(app):
     )
 
     def update_bearing(case, solvers, pa_mpa, ps_mpa, pc_mpa, rho, mu, hp_mm, ra_mm, nr, 
-                  ha_min_um, ha_max_um, n_ha, kappa, Qsc, c_um, Psi):
+                  ha_min_um, ha_max_um, n_ha, kappa, Qsc, error_type, error_um, Psi):
         """Update bearing parameters and recalculate results.
     
         Args:
@@ -92,7 +93,8 @@ def register_callbacks(app):
                 ha_min=ha_min_um * 1e-6,
                 ha_max=ha_max_um * 1e-6,
                 n_ha=int(n_ha),
-                c=c_um * 1e-6,
+                error_type=error_type,
+                error=error_um * 1e-6,
                 Psi=Psi
             )
 
@@ -165,7 +167,7 @@ def register_callbacks(app):
             Output('ha-max-input', 'value'),
             Output('nr-input', 'value'),
             Output('ha-n-input', 'value'),
-            Output('c-input', 'value'),
+            Output('error-input', 'value'),
             Output('psi-input', 'value')
          ],
         [
@@ -183,7 +185,7 @@ def register_callbacks(app):
             Input('ha-max-reset', 'n_clicks'),
             Input('nr-reset', 'n_clicks'),
             Input('ha-n-reset', 'n_clicks'),
-            Input('c-reset', 'n_clicks'),
+            Input('error-reset', 'n_clicks'),
             Input('psi-reset', 'n_clicks'),
             Input('case-select', 'value')
         ],
@@ -216,7 +218,7 @@ def register_callbacks(app):
             'ha_max': default_bearing.ha_max * 1e6,  # Convert to μm
             'nr': default_bearing.nr,
             'ha_n': default_bearing.n_ha,
-            'c': default_bearing.c * 1e6,
+            'error': default_bearing.error * 1e6,
             'psi': default_bearing.Psi
         }
         
@@ -229,6 +231,6 @@ def register_callbacks(app):
         return [
             current_values[p] if p == param else dash.no_update
             for p in ['rho', 'mu', 'hp', 'ra', 'kappa', 'Qsc', 
-                      'pa', 'pc', 'ps', 'ha_min', 'ha_max', 'nr', 'ha_n', 'c', 'psi']
+                      'pa', 'pc', 'ps', 'ha_min', 'ha_max', 'nr', 'ha_n', 'error', 'psi']
         ]
 

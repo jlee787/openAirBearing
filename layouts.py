@@ -220,18 +220,29 @@ def create_input_layout(default_bearing):
 
                 # Geometry inputs
         html.H4("Numerical model specific:"),
-        html.Div([
-            html.Label("Surface concavity (μm)"),
+        html.Div([     
+            html.Label("Geometrical error type"),
+            dcc.Dropdown(
+                id='error-select',
+                options=[
+                    {'label': 'Linear', 'value': 'linear',},
+                    {'label': 'Quadratic', 'value': 'quadratic'},
+                ],
+                value='linear',
+                style={'width': '150px'}
+            ), html.Label(""),
+
+            html.Label("Geometry error (μm)"),
                 dcc.Input(
-                    id='c-input',
+                    id='error-input',
                     type='number',
                     step=0.5,
-                    value=default_bearing.c*1e6,
+                    value=default_bearing.error*1e6,
                     style=STYLES['input']
                 ),
                 html.Button(
                     '↺',
-                    id='c-reset',
+                    id='error-reset',
                     title='Reset to default',
                     style=STYLES['reset_button']
             ),
@@ -241,7 +252,7 @@ def create_input_layout(default_bearing):
                     id='psi-input',
                     type='number',
                     min=0, step=0.01,
-                    value=default_bearing.c*1e6,
+                    value=default_bearing.Psi*1e6,
                     style=STYLES['input']
                 ),
                 html.Button(

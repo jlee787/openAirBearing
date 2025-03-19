@@ -28,7 +28,8 @@ class CircularBearing:
     nr: int = 20
     Psi: float = 0
 
-    c: float = 0e-6
+    error_type: str = "none"
+    error: float = 0e-6
 
     blocked: bool = False
     block_r: float = 25.2e-3 / 2
@@ -51,16 +52,15 @@ class CircularBearing:
     csys: str = "polar"
 
     def __post_init__(self):
-        self.r = np.linspace(1e-4, self.ra, self.nr)
+        self.r = np.linspace(1e-5, self.ra, self.nr)
         self.ha = np.linspace(self.ha_min, self.ha_max, self.n_ha).T
         self.dr = np.gradient(self.r)
         self.A = np.pi * self.ra**2
-        self.geom = self.c * (1 - self.r**2 / self.ra**2) - np.min(self.c * (1 - self.r**2 / self.ra**2))
         self.block_in = np.logical_and(self.r > self.block_r, self.r < (self.block_r + self.block_w))
         self.block_A = np.pi * (self.ra**2 - (self.block_r + self.block_w)**2 + self.block_r**2)
+        self.geom = get_geom(self)
         self.kappa = get_kappa(self)
         self.beta = get_beta(self)
-
 @dataclass
 class InfiniteLinearBearing:
     """Base class for Infinitely long linear bearing bearing"""
@@ -77,7 +77,8 @@ class InfiniteLinearBearing:
     nr: int = 30
     Psi: float = 0
 
-    c: float = 0e-6
+    error_type: str = "none"
+    error: float = 0e-6
 
     blocked: bool = False
     block_r: float = 25.2e-3 / 2
@@ -103,7 +104,7 @@ class InfiniteLinearBearing:
         self.ha = np.linspace(self.ha_min, self.ha_max, self.n_ha).T
         self.dr = np.gradient(self.r)
         self.A = 1*self.ra
-        self.geom = self.c * (1 - self.r**2 / self.ra**2) - np.min(self.c * (1 - self.r**2 / self.ra**2))
+        self.geom = get_geom(self)
         self.kappa = get_kappa(self)
         self.beta = get_beta(self)
 
@@ -124,7 +125,8 @@ class AnnularBearing:
     nr: int = 20
     Psi: float = 0
 
-    c: float = 0e-6
+    error_type: str = "none"
+    error: float = 0e-6
 
     blocked: bool = False
 
@@ -148,7 +150,7 @@ class AnnularBearing:
         self.ha = np.linspace(self.ha_min, self.ha_max, self.n_ha).T
         self.dr = np.gradient(self.r)
         self.A = np.pi * (self.ra**2 - self.rc**2)
-        self.geom = self.c * (1 - self.r**2 / self.ra**2) - np.min(self.c * (1 - self.r**2 / self.ra**2))
+        self.geom = get_geom(self)
         self.kappa = get_kappa(self)
         self.beta = get_beta(self)
 
@@ -183,6 +185,19 @@ def solve_bearing(bearing, soltype: bool) -> Result:
 
     return Result(name=name, p=p, w=w, k=k, qs=qs, qa=qa, qc=qc)
 
+def get_geom(bearing):
+    """
+    Calculate the geometry of the bearing.  
+    """
+    b = bearing
+    match b.error_type:
+        case "none":
+            geom = np.zeros_like(b.r)
+        case "linear":
+            geom = b.error * (1 - b.r / b.ra) - np.min(b.error* (1 - b.r**2 / b.ra**2))
+        case "quadratic":
+            geom = b.error * (1 - b.r**2 / b.ra**2) - np.min(b.error* (1 - b.r**2 / b.ra**2))
+    return geom
 def get_kappa(bearing):
     """
     Calculate the permeability.
