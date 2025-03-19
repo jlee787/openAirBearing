@@ -30,7 +30,7 @@ def plot_key_results(bearing, results):
     
     Args:
         bearing: Bearing instance with updated parameters
-        results: List of (p, w, k, q) tuples from solve_axisymmetric_analytic
+        results: List of (p, w, k, q) tuples from solve_bearing
     """
     # Create figure with subplots
     fig = sp.make_subplots(
@@ -219,8 +219,9 @@ def plot_bearing_shape(bearing):
         subplot_titles=('XY Geometry', 'XZ Profile')
     )
 
+
     # SHAPE XY
-    if bearing.case == "annular" or bearing.case == "axisymmetric":
+    if bearing.case == "annular" or bearing.case == "circular":
         theta = np.linspace(0, 2*np.pi, 100)
         xa = bearing.ra * np.cos(theta) * 1e3
         ya = bearing.ra * np.sin(theta) * 1e3
@@ -238,31 +239,62 @@ def plot_bearing_shape(bearing):
             ),
             row=1, col=1
         )
-    if bearing.case == "annular":
-        xc = bearing.rc * np.cos(theta) * 1e3
-        yc = bearing.rc * np.sin(theta) * 1e3
-    
+        if bearing.case == "annular":
+            xc = bearing.rc * np.cos(theta) * 1e3
+            yc = bearing.rc * np.sin(theta) * 1e3
+        
+            fig.add_trace(
+                go.Scatter(
+                    x=xc,
+                    y=yc,
+                    fill='toself',
+                    # fillcolor='rgba(255, 200, 200, 0.5)',
+                    # line=dict(color='red'),
+                    fillcolor='white',
+                    line=dict(color='black'),
+                    name='Shape',
+                    showlegend=False
+                ),
+                row=1, col=1
+            )
+    elif bearing.case == "infinite":
         fig.add_trace(
             go.Scatter(
-                x=xc,
-                y=yc,
-                fill='toself',
-                # fillcolor='rgba(255, 200, 200, 0.5)',
-                # line=dict(color='red'),
-                fillcolor='white',
+                x=np.array([1, 1]) * bearing.ra * 1e3,
+                y=np.array([0, 1000]),
+                mode='lines',
                 line=dict(color='black'),
                 name='Shape',
                 showlegend=False
             ),
             row=1, col=1
         )
+        fig.add_trace(
+            go.Scatter(
+                x=np.array([0, 0]),
+                y=np.array([0, 1000]),
+                fill='tonextx',
+                fillcolor='lightgrey',
+                mode='lines',
+                line=dict(color='black'),
+                name='Shape',
+                showlegend=False
+            ),
+            row=1, col=1
+        )
+        fig.update_yaxes( 
+            range=[0, 1000],
+        )
+        fig.update_xaxes( 
+            range=np.array([-0.5, 1.5]) * bearing.ra * 1e3,
+        )
+
 
     fig.update_xaxes( 
         title="x (mm)",
         showline=True,
         linecolor='black',
         mirror=True,
-        #range=[0, bearing.ra * 1e3],
         row=1,
         col=1
     )
@@ -272,9 +304,8 @@ def plot_bearing_shape(bearing):
         showline=True,
         linecolor='black',
         mirror=True,
-        scaleanchor="x",
+        scaleanchor= False if bearing.case == "infinite" else "x",
         scaleratio=1,
-        #range=[min(bearing.geom) * 1.2 * 1e6, max(bearing.geom) * 1.2 * 1e6],
         row=1,
         col=1
     )

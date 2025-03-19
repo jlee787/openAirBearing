@@ -3,16 +3,16 @@ import dash
 from layouts import create_layout
 from callbacks import register_callbacks
 from airbearings import (
-    AxisymmetricBearing,
+    CircularBearing,
     solve_bearing,
     ANALYTIC
 )
 
 # Define input fields with default values 
-default_bearing = AxisymmetricBearing()
+default_bearing = CircularBearing()
 
 # Initialize bearing and calculate performance
-bearing = AxisymmetricBearing()
+bearing = default_bearing
 result = solve_bearing(bearing, soltype=ANALYTIC)
 
 app = dash.Dash(

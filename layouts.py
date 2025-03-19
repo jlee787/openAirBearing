@@ -93,7 +93,7 @@ def create_layout(default_bearing, bearing, results):
     """Create the main app layout.
     
     Args:
-        bearing: AxisymmetricBearing instance
+        bearing: Bearing instance
         results: List of calculation results
         
     Returns:
@@ -148,7 +148,7 @@ def create_input_layout(default_bearing):
                 options=[
                     {'label': 'Circular thrust', 'value': 'Circular thrust'},
                     {'label': 'Annular thrust', 'value': 'Annular thrust'},
-                    {'label': 'Infinitely long', 'value': 'Infinitely long', 'disabled': True},
+                    {'label': 'Infinitely long', 'value': 'Infinitely long', 'disabled': False},
                     {'label': 'Journal', 'value': 'Journal', 'disabled': True},
                     {'label': 'Rectangluar', 'value': 'Rectangular', 'disabled': True}
                 ],
@@ -386,7 +386,7 @@ def create_results_layout(bearing, results):
     """Create the results section layout.
     
     Args:
-        bearing: AxisymmetricBearing instance
+        bearing: Bearing instance
         results: List of calculation results
     """
     return html.Div([

@@ -13,8 +13,8 @@ ANALYTIC = True
 NUMERIC = False
 
 @dataclass
-class AxisymmetricBearing:
-    """Base class for axisymmetric bearing"""
+class CircularBearing:
+    """Base class for circular thrust bearing"""
     pa: float = 101325
     pc: float = 101325
     ps: float = 0.6e6 + pa
@@ -46,7 +46,7 @@ class AxisymmetricBearing:
     geom: np.ndarray = field(init=False)
     block_in: np.ndarray = field(init=False)
 
-    case: str = "axisymmetric"
+    case: str = "circular"
     type: str = "bearing"
     csys: str = "polar"
 
@@ -73,8 +73,8 @@ class InfiniteLinearBearing:
     ha_min: float = 0.5e-6
     ha_max: float = 30e-6
     n_ha: float = 25
-    ra: float = 37e-3 / 2
-    nr: int = 20
+    ra: float = 40e-3 
+    nr: int = 30
     Psi: float = 0
 
     c: float = 0e-6
@@ -83,7 +83,7 @@ class InfiniteLinearBearing:
     block_r: float = 25.2e-3 / 2
     block_w: float = 1e-3
 
-    Qsc: float = 2.8  # L/min
+    Qsc: float = 100  # L/min
     psc: float = 0.6e6 + pa
 
     r: np.ndarray = field(init=False)
@@ -99,7 +99,7 @@ class InfiniteLinearBearing:
     csys: str = "cartesian"
 
     def __post_init__(self):
-        self.r = np.linspace(1e-4, self.ra, self.nr)
+        self.r = np.linspace(0, self.ra, self.nr)
         self.ha = np.linspace(self.ha_min, self.ha_max, self.n_ha).T
         self.dr = np.gradient(self.r)
         self.A = 1*self.ra
@@ -167,8 +167,8 @@ def solve_bearing(bearing, soltype: bool) -> Result:
     if soltype == ANALYTIC:
         name = "Analytic"
         match bearing.case:
-            case "axisymmetric":
-                p = get_pressure_analytic_axisymmetric(bearing)
+            case "circular":
+                p = get_pressure_analytic_circular(bearing)
             case "annular":
                 p = get_pressure_analytic_annular(bearing)
             case "infinite":
@@ -296,12 +296,13 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
 
 def get_pressure_analytic_infinite(bearing):
     """
-    Calculates the hyperbolic solution for the pressure distribution in infinitely long bearings and seals.
+    Calculates the solution for the pressure distribution in infinitely long bearings and seals.
     """
 
     b = bearing
 
     f = (2 * b.beta) ** 0.5
+    slip = (1 + b.Psi) ** 0.5
 
     # nondimensionals
     Pa = 1
@@ -309,17 +310,18 @@ def get_pressure_analytic_infinite(bearing):
     R = b.r / b.ra
     Ps = b.ps / b.pa
     Pc = b.pc / b.pa
-    Rc = b.rc / b.ra
 
-    numer1 = (Pa**2 - Ps**2) * k0(f * Rc) + (Ps**2 - Pc**2) * k0(f * Ra)
-    numer2 = (Pa**2 - Ps**2) * i0(f * Rc) + (Ps**2 - Pc**2) * i0(f * Ra)
+    exp_f = np.exp((f * Ra) / slip)
 
-    denom = i0(f * Rc) * k0(f * Ra) - i0(f * Ra) * k0(f * Rc)
+    numer1 = -Pc**2 + Ps**2 + exp_f * (Pa**2 - Ps**2)
+    numer2 = exp_f * (-Pa**2 + Ps**2 + exp_f * (Pc**2 - Ps**2))
 
+    denom = -1 + np.exp((2 * f * Ra) / slip)
+ 
     C1 = numer1 / denom
     C2 = numer2 / denom
 
-    p = b.pa * (Ps**2 - C1 * i0(np.outer(R, f)) + C2 * k0(np.outer(R, f))) ** 0.5
+    p = b.pa * (Ps**2 + C1 * np.exp(np.outer(R, f) / slip) + C2 * np.exp(-np.outer(R, f) / slip)) ** 0.5
     return p
 
 def get_pressure_analytic_annular(bearing):
@@ -350,9 +352,9 @@ def get_pressure_analytic_annular(bearing):
     p = b.pa * (Ps**2 - C1 * i0(np.outer(R, f)) + C2 * k0(np.outer(R, f))) ** 0.5
     return p
 
-def get_pressure_analytic_axisymmetric(bearing):
+def get_pressure_analytic_circular(bearing):
     """
-    Calculates the Bessel function solution for the pressure distribution in axisymmetric trust bearings.
+    Calculates the Bessel function solution for the pressure distribution in circluar trust bearings.
     """
     b = bearing
     p = b.ps * (1 - (1 - b.pa**2 / b.ps**2) *

@@ -9,9 +9,13 @@ def register_callbacks(app):
     
     def get_default_bearing(case):
         """Return default bearing instance based on case."""
-        if case == 'Annular thrust':
-            return AnnularBearing()
-        return AxisymmetricBearing()
+        match case:
+                case 'Circular thrust':
+                    return CircularBearing()
+                case 'Annular thrust':
+                    return AnnularBearing()
+                case 'Infinitely long':
+                    return InfiniteLinearBearing()
                                          
     # Add callback to handle parameter updates
     @app.callback(
@@ -65,8 +69,16 @@ def register_callbacks(app):
         
         try:
             # Get default bearing for selected case
-            bearing_class = AnnularBearing if case == 'Annular thrust' else AxisymmetricBearing
-            
+            match case:
+                case 'Circular thrust':
+                    bearing_class = CircularBearing
+                case 'Annular thrust':
+                    bearing_class = AnnularBearing
+                case 'Infinitely long':
+                    bearing_class = InfiniteLinearBearing
+                case _:
+                    raise ValueError(f"Invalid case: {case}")
+                
             # Create new bearing instance with appropriate class
             bearing = bearing_class(
                 pa=pa_mpa * 1e6,
@@ -134,7 +146,7 @@ def register_callbacks(app):
             'align-items': 'center'
         }
     
-        if case == 'Annular thrust':
+        if case == 'Annular thrust' or case == 'Infinitely long':
             return {**base_style, 'display': 'grid'}
         return {**base_style, 'display': 'none'}
 
