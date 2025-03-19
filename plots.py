@@ -15,6 +15,16 @@ SOLVER_COLORS = {
     'Numeric 2': 'green'
 }
 
+# Common axis properties
+AXIS_STYLE = dict(
+    title_font=PLOT_FONT,
+    tickfont=PLOT_FONT,
+    showline=True,
+    linecolor='black',
+    ticks='inside',
+    mirror=True
+)
+
 def plot_key_results(bearing, results):
     """Create four subplots for bearing visualization
     
@@ -151,22 +161,11 @@ def plot_key_results(bearing, results):
             fig.layout.annotations[4].text = "" # remove subplot title
             fig.layout.annotations[5].text = "" 
     
-
-    # Common axis properties
-    axis_style = dict(
-        title_font=PLOT_FONT,
-        tickfont=PLOT_FONT,
-        showline=True,
-        linecolor='black',
-        ticks='inside',
-        mirror=True
-    )
-
     # Update axes
     for i in range(1, 3):
         for j in range(1, 4):
-            fig.update_xaxes(axis_style, row=i, col=j)
-            fig.update_yaxes(axis_style, row=i, col=j)
+            fig.update_xaxes(AXIS_STYLE, row=i, col=j)
+            fig.update_yaxes(AXIS_STYLE, row=i, col=j)
 
     # Update axis labels and ranges
     max_height = bearing.ha_max * 1e6
@@ -191,7 +190,7 @@ def plot_key_results(bearing, results):
     # Update layout
     fig.update_layout(
         font=PLOT_FONT,
-        height=500,
+        height=600,
         #showlegend=True,
         plot_bgcolor='white',
         paper_bgcolor='white',
@@ -214,36 +213,84 @@ def plot_bearing_shape(bearing):
         bearing: Bearing instance with geometry parameters
     """
     # Create figure
-    fig = go.Figure()
+    #fig = go.Figure()
+    fig = sp.make_subplots(
+        rows=1, cols=2, 
+        subplot_titles=('XY Geometry', 'XZ Profile')
+    )
 
+    # SHAPE XY
+    if bearing.case == "annular" or bearing.case == "axisymmetric":
+        theta = np.linspace(0, 2*np.pi, 100)
+        xa = bearing.ra * np.cos(theta) * 1e3
+        ya = bearing.ra * np.sin(theta) * 1e3
+        fig.add_trace(
+            go.Scatter(
+                x=xa,
+                y=ya,
+                fill='toself',
+                # fillcolor='rgba(255, 200, 200, 0.5)',
+                # line=dict(color='red'),
+                fillcolor='lightgrey',
+                line=dict(color='black'),
+                name='Shape',
+                showlegend=False
+            ),
+            row=1, col=1
+        )
+    if bearing.case == "annular":
+        xc = bearing.rc * np.cos(theta) * 1e3
+        yc = bearing.rc * np.sin(theta) * 1e3
+    
+        fig.add_trace(
+            go.Scatter(
+                x=xc,
+                y=yc,
+                fill='toself',
+                # fillcolor='rgba(255, 200, 200, 0.5)',
+                # line=dict(color='red'),
+                fillcolor='white',
+                line=dict(color='black'),
+                name='Shape',
+                showlegend=False
+            ),
+            row=1, col=1
+        )
 
-    # fig.add_trace(
-    #     go.Scatter(
-    #         x=np.array([0, bearing.ra])* 1e3,  # Convert to mm
-    #         y=np.array([1, 1])*1e6,
-    #         showlegend=False
-    #     )
-    # )
-    # # Add porous layer shape
-    # fig.add_trace(
-    #     go.Scatter(
-    #         x=bearing.r * 1e3,  # Convert to mm
-    #         y=np.zeros(bearing.nr), 
-    #         fill='tonexty',
-    #         fillcolor='rgba(200, 200, 255, 0.5)',
-    #         line=dict(color='blue'),
-    #         name='Analytic',
-    #         showlegend=False
-    #     )
-    # )
+    fig.update_xaxes( 
+        title="x (mm)",
+        showline=True,
+        linecolor='black',
+        mirror=True,
+        #range=[0, bearing.ra * 1e3],
+        row=1,
+        col=1
+    )
+   
+    fig.update_yaxes(
+        title="y (mm)",
+        showline=True,
+        linecolor='black',
+        mirror=True,
+        scaleanchor="x",
+        scaleratio=1,
+        #range=[min(bearing.geom) * 1.2 * 1e6, max(bearing.geom) * 1.2 * 1e6],
+        row=1,
+        col=1
+    )
 
     fig.add_trace(
         go.Scatter(
             x=np.array([bearing.r[1] * 1e3, bearing.r[-1] * 1e3]),  # Convert to mm
             y=np.array([100, 100]),
+            line=dict(color='black'),
             showlegend=False
-        )
+        ),
+        row=1, col=2
     )
+
+
+    # PROFILE XZ
     fig.add_trace(
         go.Scatter(
             x=bearing.r * 1e3,  # Convert to mm
@@ -255,29 +302,47 @@ def plot_bearing_shape(bearing):
             line=dict(color='black'),
             name='Shape',
             showlegend=False
-        )
+        ),
+        row=1, col=2
     )
-    
-    # Update layout
+
+    for i in range(1, 3):
+        fig.update_xaxes(AXIS_STYLE, row=i, col=1)
+
+
+    fig.update_yaxes(
+        title="Shape (μm)",
+        showline=True,
+        linecolor='black',
+        mirror=True,
+        range=[min(bearing.geom) * 1.2 * 1e6, max(bearing.geom) * 1.2 * 1e6],
+        row=1,
+        col=2
+    )
+
+    fig.update_xaxes( 
+        title="r (mm)",
+        showline=True,
+        linecolor='black',
+        mirror=True,
+        range=[0, bearing.ra * 1e3],
+        row=1,
+        col=2
+    )
+
     fig.update_layout(
         font=PLOT_FONT,
-        height=200,
-        margin=dict(l=20, r=20, t=20, b=20),
+        height=300,
+        #showlegend=True,
         plot_bgcolor='white',
         paper_bgcolor='white',
-        xaxis=dict(
-            title="r (mm)",
-            showline=True,
-            linecolor='black',
-            mirror=True,
-            range=[0, bearing.ra * 1e3]
-        ),
-        yaxis=dict(
-            title="Shape (μm)",
-            showline=True,
-            linecolor='black',
-            mirror=True,
-            range=[min(bearing.geom) * 1.2 * 1e6, max(bearing.geom) * 1.2 * 1e6]
+        margin=dict(l=20, r=20, t=20, b=20),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.1,
+            xanchor="center",
+            x=0.5
         )
     )
     return fig
