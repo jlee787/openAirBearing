@@ -31,6 +31,7 @@ def plot_key_results(bearing, results):
         bearing: Bearing instance with updated parameters
         results: List of (p, w, k, q) tuples from solve_bearing
     """
+    b = bearing
     # Create figure with subplots
     fig = sp.make_subplots(
         rows=2, cols=3, 
@@ -53,13 +54,13 @@ def plot_key_results(bearing, results):
         # Load capacity plot
         fig.add_trace(
             go.Scatter(
-                x=bearing.ha.flatten() * 1e6, 
+                x=b.ha.flatten() * 1e6, 
                 y=result.w,
                 name=result.name,
                 mode='lines+markers',
                 marker=dict(
                     color=color, 
-                    size=[8 if i == k_max_idx else 0 for i in range(bearing.nr)], 
+                    size=[8 if i == k_max_idx else 0 for i in range(b.nr)], 
                     symbol='circle'),
                 line=dict(color=color)
             ), 
@@ -69,13 +70,13 @@ def plot_key_results(bearing, results):
         # Stiffness plot
         fig.add_trace(
             go.Scatter(
-                x=bearing.ha.flatten() * 1e6,
+                x=b.ha.flatten() * 1e6,
                 y=result.k * 1e-6,
                 name=result.name,
                 mode='lines+markers',
                 marker=dict(
                     color=color, 
-                    size=[8 if i == k_max_idx else 0 for i in range(bearing.nr)], 
+                    size=[8 if i == k_max_idx else 0 for i in range(b.nr)], 
                     symbol='circle'),
                 line=dict(color=color),
                 showlegend=False
@@ -85,19 +86,19 @@ def plot_key_results(bearing, results):
         
         # Pressure distribution plot with distributed labels
         n_plots = 4
-        h_plots = np.linspace(bearing.ha_min**0.5, bearing.ha_max**0.5, n_plots)**2
-        t_locations = np.round(np.linspace(bearing.nr, 0, n_plots+2)[1:-1]).astype(int)
+        h_plots = np.linspace(b.ha_min**0.5, b.ha_max**0.5, n_plots)**2
+        t_locations = np.round(np.linspace(b.nr, 0, n_plots+2)[1:-1]).astype(int)
         
         for h_plot, t_loc in zip(h_plots, t_locations):
-            in_h = np.abs(bearing.ha - h_plot).argmin()
-            pressures = (result.p[:, in_h] - bearing.pa) * 1e-6  # Convert to MPa
+            in_h = np.abs(b.ha - h_plot).argmin()
+            pressures = (result.p[:, in_h] - b.pa) * 1e-6  # Convert to MPa
             fig.add_trace(
                 go.Scatter(
-                    x=bearing.r * 1e3,
+                    x=b.r * 1e3,
                     y=pressures,
                     mode='lines+text',
                     textposition='top center',
-                    text=[f"{h_plot*1e6:.2f} μm" if i == t_loc else None for i in range(bearing.nr)],
+                    text=[f"{h_plot*1e6:.2f} μm" if i == t_loc else None for i in range(b.nr)],
                     textfont=dict(color=color),
                     name=f"{result.name} {h_plot*1e6:.1f} μm",
                     line=dict(color=color),
@@ -109,13 +110,13 @@ def plot_key_results(bearing, results):
         # Supply Flow rate plot
         fig.add_trace(
             go.Scatter(
-                x=bearing.ha.flatten() * 1e6,
+                x=b.ha.flatten() * 1e6,
                 y=result.qs,
                 name=result.name,
                 mode='lines+markers',
                 marker=dict(
                     color=color, 
-                    size=[8 if i == k_max_idx else 0 for i in range(bearing.nr)], 
+                    size=[8 if i == k_max_idx else 0 for i in range(b.nr)], 
                     symbol='circle'),
                 line=dict(color=color),
                 showlegend=False
@@ -123,17 +124,17 @@ def plot_key_results(bearing, results):
             row=2, col=1
         )
         
-        if bearing.type == "seal":
+        if b.type == "seal":
             # Chamber Flow rate plot
             fig.add_trace(
                 go.Scatter(
-                    x=bearing.ha.flatten() * 1e6,
+                    x=b.ha.flatten() * 1e6,
                     y=result.qc,
                     name=result.name,
                     mode='lines+markers',
                     marker=dict(
                         color=color, 
-                        size=[8 if i == k_max_idx else 0 for i in range(bearing.nr)], 
+                        size=[8 if i == k_max_idx else 0 for i in range(b.nr)], 
                         symbol='circle'),
                     line=dict(color=color),
                     showlegend=False
@@ -144,13 +145,13 @@ def plot_key_results(bearing, results):
             # Ambient Flow rate plot
             fig.add_trace(
                 go.Scatter(
-                    x=bearing.ha.flatten() * 1e6,
+                    x=b.ha.flatten() * 1e6,
                     y=result.qa,
                     name=result.name,
                     mode='lines+markers',
                     marker=dict(
                         color=color, 
-                        size=[8 if i == k_max_idx else 0 for i in range(bearing.nr)], 
+                        size=[8 if i == k_max_idx else 0 for i in range(b.nr)], 
                         symbol='circle'),
                     line=dict(color=color),
                     showlegend=False
@@ -168,8 +169,8 @@ def plot_key_results(bearing, results):
             fig.update_yaxes(AXIS_STYLE, row=i, col=j)
 
     # Update axis labels and ranges
-    max_height = bearing.ha_max * 1e6
-    max_radius = bearing.ra * 1e3
+    max_height = b.ha_max * 1e6
+    max_radius = b.ra * 1e3
 
     fig.update_xaxes(title_text="h (μm)", range=[0, max_height], row=1, col=1)
     fig.update_xaxes(title_text="h (μm)", range=[0, max_height], row=1, col=2)
@@ -212,6 +213,7 @@ def plot_bearing_shape(bearing):
     Args:
         bearing: Bearing instance with geometry parameters
     """
+    b = bearing
     # Create figure
     #fig = go.Figure()
     fig = sp.make_subplots(
@@ -220,10 +222,10 @@ def plot_bearing_shape(bearing):
     )
 
     # SHAPE XY
-    if bearing.case == "annular" or bearing.case == "circular":
+    if b.case == "annular" or b.case == "circular":
         theta = np.linspace(0, 2*np.pi, 100)
-        xa = bearing.ra * np.cos(theta) * 1e3
-        ya = bearing.ra * np.sin(theta) * 1e3
+        xa = b.ra * np.cos(theta) * 1e3
+        ya = b.ra * np.sin(theta) * 1e3
         fig.add_trace(
             go.Scatter(
                 x=xa,
@@ -236,9 +238,10 @@ def plot_bearing_shape(bearing):
             ),
             row=1, col=1
         )
-        if bearing.case == "annular":
-            xc = bearing.rc * np.cos(theta) * 1e3
-            yc = bearing.rc * np.sin(theta) * 1e3
+
+        if b.case == "annular":
+            xc = b.rc * np.cos(theta) * 1e3
+            yc = b.rc * np.sin(theta) * 1e3
             fig.add_trace(
                 go.Scatter(
                     x=xc,
@@ -251,10 +254,42 @@ def plot_bearing_shape(bearing):
                 ),
                 row=1, col=1
             )
-    elif bearing.case == "infinite":
+
+        # symmetry line
         fig.add_trace(
             go.Scatter(
-                x=np.array([1, 1]) * bearing.ra * 1e3,
+                x=[0,0],
+                y=[-b.ra*0.2e3, b.ra*0.2e3],
+                mode='lines',
+                line=dict(
+                    color='gray',
+                    width=1,
+                    dash='dashdot' 
+                ),
+                showlegend=False
+            ),
+            row=1, col=1
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[-b.ra*0.2e3, b.ra*0.2e3],
+                y=[0,0],
+                mode='lines',
+                line=dict(
+                    color='gray',
+                    width=1,
+                    dash='dashdot' 
+                ),
+                showlegend=False
+            ),
+            row=1, col=1
+        )
+
+
+    elif b.case == "infinite":
+        fig.add_trace(
+            go.Scatter(
+                x=np.array([1, 1]) * b.ra * 1e3,
                 y=np.array([0, 1000]),
                 mode='lines',
                 line=dict(color='black'),
@@ -263,6 +298,7 @@ def plot_bearing_shape(bearing):
             ),
             row=1, col=1
         )
+
         fig.add_trace(
             go.Scatter(
                 x=np.array([0, 0]),
@@ -276,11 +312,13 @@ def plot_bearing_shape(bearing):
             ),
             row=1, col=1
         )
+
         fig.update_yaxes( 
             range=[0, 1000],
         )
+
         fig.update_xaxes( 
-            range=np.array([-0.5, 1.5]) * bearing.ra * 1e3,
+            range=np.array([-0.5, 1.5]) * b.ra * 1e3,
         )
 
     fig.update_xaxes( 
@@ -296,22 +334,37 @@ def plot_bearing_shape(bearing):
         showline=True,
         linecolor='black',
         mirror=True,
-        scaleanchor= False if bearing.case == "infinite" else "x",
+        scaleanchor= False if b.case == "infinite" else "x",
         scaleratio=1,
         row=1,
         col=1
     )
 
+
+
     # PROFILE XZ
+    if b.case == 'circular':
+        x = np.concatenate(([-b.r[-1]], -np.flip(b.r), b.r, [b.r[-1]])) * 1e3
+        y = np.concatenate(([100], np.flip(b.geom), b.geom, [100])) * 1e6
+        t = ['Bearing<br>' if i == b.nr else None for i in range(b.nr*2)]
+    elif b.case == 'annular':
+        x = np.concatenate(([-b.r[-1]], -np.flip(b.r), [b.r[1]], [b.r[1]], b.r, [b.r[-1]])) * 1e3
+        y = np.concatenate(([100], np.flip(b.geom), [100], [100], b.geom, [100])) * 1e6
+        t = ['Bearing<br>' if i == i in [b.nr // 2, 2 + b.nr + b.nr // 2] else None for i in range(b.nr*2)]
+    else:
+        x = np.concatenate(([b.r[1]], b.r, [b.r[-1]])) * 1e3
+        y = np.concatenate(([100], b.geom, [100])) * 1e6
+        t = ['Bearing<br>' if i == b.nr // 2 else None for i in range(b.nr)]
+
     fig.add_trace(
         go.Scatter(
-            x=np.concatenate(([bearing.r[1]], bearing.r, [bearing.r[-1]])) * 1e3,  # Convert to mm
-            y=np.concatenate(([100], bearing.geom, [100])) * 1e6,  # Convert to um
+            x=x,
+            y=y,
             fill='toself',
             fillcolor='lightgrey',
             mode='lines+text',
             textposition='top center',
-            text=['Bearing<br>' if i == bearing.nr // 2 else None for i in range(bearing.nr)],
+            text=t,
             textfont=dict(size=14),
             line=dict(color='black'),
             name='Bearing',
@@ -323,7 +376,7 @@ def plot_bearing_shape(bearing):
     # Guide surface XZ
     fig.add_trace(
         go.Scatter(
-            x=np.array([0, bearing.ra/2, bearing.ra]) * 1e3,  # Convert to mm
+            x=np.array([(x[-1] - x[-1] * 1.2 if x[1] == 0 else x[1] * 1.2), (x[1] + x[-1]) / 2, x[-1] * 1.2]),  # Convert to mm
             y=np.ones(3) * -0.1,  # Convert to um
             mode='lines+text',
             textposition='bottom center',
@@ -336,6 +389,23 @@ def plot_bearing_shape(bearing):
         row=1, col=2
     )
 
+    # symmetry line
+    if b.csys == 'polar':
+        fig.add_trace(
+            go.Scatter(
+                x=[0, 0],
+                y=[-100, 100],
+                mode='lines',
+                line=dict(
+                    color='gray',
+                    width=1,
+                    dash='dashdot' 
+                ),
+                showlegend=False
+            ),
+            row=1, col=2
+        )
+
     for i in range(1, 3):
         fig.update_xaxes(AXIS_STYLE, row=i, col=1)
 
@@ -344,7 +414,7 @@ def plot_bearing_shape(bearing):
         showline=True,
         linecolor='black',
         mirror=True,
-        range=[0, bearing.ra * 1e3],
+        range=[(x[-1] - x[-1] * 1.1 if x[1] == 0 else x[1] * 1.1), x[-1] * 1.1],
         row=1,
         col=2
     )
@@ -353,7 +423,7 @@ def plot_bearing_shape(bearing):
         showline=True,
         linecolor='black',
         mirror=True,
-        range=[-0.5 - 0.3e6 * abs(bearing.error), 1 + max(bearing.geom) * 1e6],
+        range=[-0.5 - 0.3e6 * abs(b.error), 1 + max(b.geom) * 1e6],
         row=1,
         col=2
     )
