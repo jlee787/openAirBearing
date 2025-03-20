@@ -184,8 +184,8 @@ def plot_key_results(bearing, results):
     fig.update_yaxes(title_text="p (MPa)", range=[0, None], row=1, col=3)
 
     fig.update_yaxes(title_text="q<sub>s</sub> (l/min)", range=[0, None], row=2, col=1)
-    fig.update_yaxes(title_text="q<sub>c</sub> (l/min)", range=[None, 0], row=2, col=2)
-    fig.update_yaxes(title_text="q<sub>a</sub> (l/min)", range=[0, None], row=2, col=3)
+    fig.update_yaxes(title_text="q<sub>c</sub> (l/min)", range=[None, None], row=2, col=2)
+    fig.update_yaxes(title_text="q<sub>a</sub> (l/min)", range=[None, None], row=2, col=3)
 
     # Update layout
     fig.update_layout(
@@ -229,8 +229,6 @@ def plot_bearing_shape(bearing):
                 x=xa,
                 y=ya,
                 fill='toself',
-                # fillcolor='rgba(255, 200, 200, 0.5)',
-                # line=dict(color='red'),
                 fillcolor='lightgrey',
                 line=dict(color='black'),
                 name='Shape',
