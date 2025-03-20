@@ -268,7 +268,9 @@ def create_input_layout(default_bearing):
             html.Label("Ambient Pressure (MPa)"),
             dcc.Input(id='pa-input', type='number', 
                     value=default_bearing.pa * 1e-6,  # Convert Pa to MPa
-                    min=0, inputMode='numeric',
+                    min=0,
+                    step=0.1,
+                    inputMode='numeric',
                     style=STYLES['input']),
             html.Button(
                 '↺',
@@ -278,9 +280,12 @@ def create_input_layout(default_bearing):
             ),
        
             html.Label("Supply Pressure (MPa)"),
-            dcc.Input(id='ps-input', type='number', 
+            dcc.Input(id='ps-input',
+                    type='number', 
                     value=default_bearing.ps * 1e-6,  # Convert Pa to MPa
-                    min=0.1, step=0.1, inputMode='numeric',
+                    min=0.1,
+                    step=0.1,
+                    inputMode='numeric',
                     style=STYLES['input']),
             html.Button(
                 '↺',
@@ -292,9 +297,12 @@ def create_input_layout(default_bearing):
 
         html.Div([
             html.Label("Chamber Pressure (MPa)"),
-            dcc.Input(id='pc-input', type='number', 
+            dcc.Input(id='pc-input',
+                    type='number', 
                     value=default_bearing.pc * 1e-6,  # Convert Pa to MPa
-                    min=0.1, step=0.1, inputMode='numeric',
+                    min=0.1,
+                    step=0.1,
+                    inputMode='numeric',
                     style=STYLES['input']),
             html.Button(
                 '↺',
