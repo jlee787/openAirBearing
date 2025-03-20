@@ -36,7 +36,7 @@ def plot_key_results(bearing, results):
         rows=2, cols=3, 
         subplot_titles=('Load Capacity', 'Stiffness', 'Pressure Distribution',
                         'Supply Flow Rate', 'Chamber Flow Rate', 'Ambient Flow Rate', 
-                        )
+                        ),
     )
 
      # Convert single inputs to lists for consistent handling
@@ -106,7 +106,6 @@ def plot_key_results(bearing, results):
                 row=1, col=3
             )
 
-
         # Supply Flow rate plot
         fig.add_trace(
             go.Scatter(
@@ -159,7 +158,7 @@ def plot_key_results(bearing, results):
                 row=2, col=3
             )
         else:
-            fig.layout.annotations[4].text = "" # remove subplot title
+            fig.layout.annotations[4].text = "" # remove subplot titles for missing plots
             fig.layout.annotations[5].text = "" 
     
     # Update axes
@@ -220,7 +219,6 @@ def plot_bearing_shape(bearing):
         subplot_titles=('XY Geometry', 'XZ Profile')
     )
 
-
     # SHAPE XY
     if bearing.case == "annular" or bearing.case == "circular":
         theta = np.linspace(0, 2*np.pi, 100)
@@ -248,8 +246,6 @@ def plot_bearing_shape(bearing):
                     x=xc,
                     y=yc,
                     fill='toself',
-                    # fillcolor='rgba(255, 200, 200, 0.5)',
-                    # line=dict(color='red'),
                     fillcolor='white',
                     line=dict(color='black'),
                     name='Shape',
@@ -315,7 +311,27 @@ def plot_bearing_shape(bearing):
             y=np.concatenate(([100], bearing.geom, [100])) * 1e6,  # Convert to um
             fill='toself',
             fillcolor='lightgrey',
+            mode='lines+text',
+            textposition='top center',
+            text=['Bearing<br>' if i == bearing.nr // 2 else None for i in range(bearing.nr)],
+            textfont=dict(size=14),
             line=dict(color='black'),
+            name='Bearing',
+            showlegend=True
+        ),
+        row=1, col=2
+    )
+
+    # Guide surface XZ
+    fig.add_trace(
+        go.Scatter(
+            x=np.array([0, bearing.ra/2, bearing.ra]) * 1e3,  # Convert to mm
+            y=np.ones(3) * -0.1,  # Convert to um
+            mode='lines+text',
+            textposition='bottom center',
+            text=[None, '<br>Guide surface', None],
+            textfont=dict(size=14),
+            line=dict(color='gray'),
             name='Shape',
             showlegend=False
         ),
@@ -339,7 +355,7 @@ def plot_bearing_shape(bearing):
         showline=True,
         linecolor='black',
         mirror=True,
-        range=[min(bearing.geom) * 1.2 * 1e6, max(bearing.geom) * 1.2 * 1e6],
+        range=[-0.5 - 0.3e6 * abs(bearing.error), 1 + max(bearing.geom) * 1e6],
         row=1,
         col=2
     )
@@ -347,7 +363,7 @@ def plot_bearing_shape(bearing):
     fig.update_layout(
         font=PLOT_FONT,
         height=300,
-        #showlegend=True,
+        showlegend=True,
         plot_bgcolor='white',
         paper_bgcolor='white',
         margin=dict(l=20, r=20, t=20, b=20),
