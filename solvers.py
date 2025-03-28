@@ -268,7 +268,6 @@ def build_diff_matrix(coef: np.ndarray, eps: np.ndarray, dr: np.ndarray) -> sp.c
 
     # Compute epsilon at half-points
     eps_half = (eps[:-1] + eps[1:]) / 2
-
     # Finite difference second derivative matrix with variable coefficient
     diag_main = np.zeros(N)
     diag_upper = np.zeros(N-1)
@@ -318,7 +317,7 @@ def get_pressure_2d_numeric(bearing):
     for i, h in enumerate(b.ha):
         h += b.geom
         if b.csys == "polar":
-            epsilon = (1 + b.Psi) * b.x[:, np.newaxis] * h**3 / (24 * b.mu)
+            epsilon = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
             coefficient = sp.diags(1 / b.x, 0)
         elif b.csys == "cartesian":
             epsilon = (1 + b.Psi) * h**3 / (24 * b.mu)
@@ -391,14 +390,13 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
         dx (np.ndarray): angular grid spacing.
         bc (dict): Dictionary specifying boundary conditions for "left", "right", "top", and "bottom".
         
-
     Returns:
         sp.csr_matrix: Sparse matrix representing the 2D differential operator.
     """
 
-
     # Compute epsilon at half-points
-    eps_half = (eps[:-1] + eps[1:]) / 2
+    eps_half_x = (eps[:-1, :] + eps[1:, :]) / 2
+    eps_half_y = (eps[:, :-1] + eps[:, 1:]) / 2
 
     # Initialize diagonals for the sparse matrix
     diag_main = np.zeros(N * M) 
@@ -465,32 +463,13 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import plots
 
-    bearing = AnnularBearing()
-    result = solve_bearing(bearing, ANALYTIC)
+ 
+
+    bearing = RectangularBearing()
+    result = solve_bearing(bearing, NUMERIC)
     
-    #figure = plots.plot_key_results(bearing, result)
-    figure = plots.plot_bearing_shape(bearing)
+    figure = plots.plot_key_results(bearing, result)
+    # figure = plots.plot_bearing_shape(bearing)
     figure.show()
-    # plt.figure()
-    # plt.contourf(bearing.x*1e3, bearing.y*1e3, result.p[:, :, 7]*1e-6, levels=50, cmap="viridis")
-    # plt.colorbar(label="Pressure (MPa)")
-    # plt.xlabel("x (mm)")
-    # plt.ylabel("y (mm)")
-    # plt.title("2D Pressure Distribution")
-    # plt.axis('equal')
 
-    # plt.figure()
-    # plt.plot(bearing.ha*1e6, result.w)
-
-    # plt.figure()
-    # plt.plot(bearing.ha*1e6, result.k)
-    
-
-    # plt.figure()
-    # plt.plot(bearing.ha*1e6, result.qs)
-    
-    
-    plt.show()
-    #figure = plot_key_results(bearing, result)
-    #show(figure)
-
+  

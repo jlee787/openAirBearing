@@ -165,7 +165,7 @@ def plot_key_results(bearing, results):
 
             fig.update_xaxes(
                 title_text="x (mm)",
-                #range=[b.x.min() * 1e3, b.x.max() * 1e3],
+                range=[b.x.min() * 1e3, b.x.max() * 1e3],
                 row=1, col=3)
             
             fig.update_yaxes(
@@ -419,8 +419,6 @@ def plot_bearing_shape(bearing):
             )
             fig.update_yaxes( 
                 range=np.array([-0.6, 0.6]) * b.ya * 1e3,
-                scaleanchor="x",
-                scaleratio=1,
             )
             fig.update_xaxes( 
                 range=np.array([-0.6, 0.6]) * b.xa * 1e3,
@@ -448,99 +446,123 @@ def plot_bearing_shape(bearing):
         col=1
     )
 
+    if b.case == 'rectangular':
+        fig.add_trace(
+            go.Contour(
+                z=b.geom.T*1e6,
+                x=b.x * 1e3,
+                y=b.y * 1e3,  
+                colorscale='Viridis',
+                zmin=0,
+                zmax=b.error*1e6,
+                contours=dict(
+                    coloring='heatmap',
+                    showlabels=True,
+                    labelfont=dict(size=10, color='white')
+                ),
+                colorbar=dict(
+                title="(μm)",
+                thickness=15
+            ),
+            name="Air gap pressure"
+            ),
+            row=1, col=2  
+        )
+        fig.update_xaxes(
+            title_text="x (mm)",
+            range=np.array([-0.6, 0.6]) * b.xa * 1e3,
+            row=1, col=2
+            )
+        
+        fig.update_yaxes(
+            title_text="y (mm)",
+            range=np.array([-0.6, 0.6]) * b.ya * 1e3,
+            row=1, col=2
+            )
+    else:
+        # PROFILE XZ
+        match b.case:
+            case 'circular':
+                x = np.concatenate(([-b.x[-1]], -np.flip(b.x), b.x, [b.x[-1]])) * 1e3
+                y = np.concatenate(([100], np.flip(b.geom), b.geom, [100])) * 1e6
+                t = ['Bearing<br>' if i == b.nx else None for i in range(b.nx*2)]
+            case 'annular':
+                x = np.concatenate(([-b.x[-1]], -np.flip(b.x), [b.x[1]], [b.x[1]], b.x, [b.x[-1]])) * 1e3
+                y = np.concatenate(([100], np.flip(b.geom), [100], [100], b.geom, [100])) * 1e6
+                t = ['Bearing<br>' if i == i in [b.nx // 2, 2 + b.nx + b.nx // 2] else None for i in range(b.nx*2)]
+            case 'infinite':
+                x = np.concatenate(([b.x[1]], b.x, [b.x[-1]])) * 1e3
+                y = np.concatenate(([100], b.geom, [100])) * 1e6
+                t = ['Bearing<br>' if i == b.nx // 2 else None for i in range(b.nx)]
+            case _:
+                pass
 
-    # PROFILE XZ
-    match b.case:
-        case 'circular':
-            x = np.concatenate(([-b.x[-1]], -np.flip(b.x), b.x, [b.x[-1]])) * 1e3
-            y = np.concatenate(([100], np.flip(b.geom), b.geom, [100])) * 1e6
-            t = ['Bearing<br>' if i == b.nx else None for i in range(b.nx*2)]
-        case 'annular':
-            x = np.concatenate(([-b.x[-1]], -np.flip(b.x), [b.x[1]], [b.x[1]], b.x, [b.x[-1]])) * 1e3
-            y = np.concatenate(([100], np.flip(b.geom), [100], [100], b.geom, [100])) * 1e6
-            t = ['Bearing<br>' if i == i in [b.nx // 2, 2 + b.nx + b.nx // 2] else None for i in range(b.nx*2)]
-        case 'infinite':
-            x = np.concatenate(([b.x[1]], b.x, [b.x[-1]])) * 1e3
-            y = np.concatenate(([100], b.geom, [100])) * 1e6
-            t = ['Bearing<br>' if i == b.nx // 2 else None for i in range(b.nx)]
-        case 'rectangular':
-            x = np.array([1, 1]) * 1e3
-            y = np.array([1, 1]) * 1e6
-            t = [None, None]
-        case _:
-            pass
-
-    fig.add_trace(
-        go.Scatter(
-            x=x,
-            y=y,
-            fill='toself',
-            fillcolor='lightgrey',
-            mode='lines+text',
-            textposition='top center',
-            text=t,
-            textfont=dict(size=14),
-            line=dict(color='black'),
-            name='Bearing',
-            showlegend=True
-        ),
-        row=1, col=2
-    )
-
-    # Guide surface XZ
-    fig.add_trace(
-        go.Scatter(
-            x=np.array([(x[-1] - x[-1] * 1.2 if x[1] == 0 else x[1] * 1.2), (x[1] + x[-1]) / 2, x[-1] * 1.2]),  # Convert to mm
-            y=np.ones(3) * -0.1,  # Convert to um
-            mode='lines+text',
-            textposition='bottom center',
-            text=[None, '<br>Guide surface', None],
-            textfont=dict(size=14),
-            line=dict(color='gray'),
-            name='Shape',
-            showlegend=False
-        ),
-        row=1, col=2
-    )
-
-    # symmetry line
-    if b.csys == 'polar':
         fig.add_trace(
             go.Scatter(
-                x=[0, 0],
-                y=[-100, 100],
-                mode='lines',
-                line=dict(
-                    color='gray',
-                    width=1,
-                    dash='dashdot' 
-                ),
+                x=x,
+                y=y,
+                fill='toself',
+                fillcolor='lightgrey',
+                mode='lines+text',
+                textposition='top center',
+                text=t,
+                textfont=dict(size=14),
+                line=dict(color='black'),
+                name='Bearing',
+                showlegend=True
+            ),
+            row=1, col=2
+        )
+
+        # Guide surface XZ
+        fig.add_trace(
+            go.Scatter(
+                x=np.array([(x[-1] - x[-1] * 1.2 if x[1] == 0 else x[1] * 1.2), (x[1] + x[-1]) / 2, x[-1] * 1.2]),  # Convert to mm
+                y=np.ones(3) * -0.1,  # Convert to um
+                mode='lines+text',
+                textposition='bottom center',
+                text=[None, '<br>Guide surface', None],
+                textfont=dict(size=14),
+                line=dict(color='gray'),
+                name='Shape',
                 showlegend=False
             ),
             row=1, col=2
         )
 
-    for i in range(1, 3):
-        fig.update_xaxes(AXIS_STYLE, row=i, col=1)
+        # symmetry line
+        if b.csys == 'polar':
+            fig.add_trace(
+                go.Scatter(
+                    x=[0, 0],
+                    y=[-100, 100],
+                    mode='lines',
+                    line=dict(
+                        color='gray',
+                        width=1,
+                        dash='dashdot' 
+                    ),
+                    showlegend=False
+                ),
+                row=1, col=2
+            )
 
-    fig.update_xaxes( 
-        title="r (mm)",
-        showline=True,
-        linecolor='black',
-        mirror=True,
-        range=[(x[-1] - x[-1] * 1.1 if x[1] == 0 else x[1] * 1.1), x[-1] * 1.1],
-        row=1,
-        col=2
-    )
-    fig.update_yaxes(
-        title="Shape (μm)",
-        showline=True,
-        linecolor='black',
-        mirror=True,
-        range=[-0.5 - 0.3e6 * abs(b.error), 1 + np.max(b.geom) * 1e6],
-        row=1,
-        col=2
-    )
+            fig.update_xaxes( 
+                title="r (mm)",
+                range=[(x[-1] - x[-1] * 1.1 if x[1] == 0 else x[1] * 1.1), x[-1] * 1.1],
+                row=1,
+                col=2
+            )
+            fig.update_yaxes(
+                title="Shape (μm)",
+                range=[-0.5 - 0.3e6 * abs(b.error), 1 + np.max(b.geom) * 1e6],
+                row=1,
+                col=2
+            )
+
+    for i in range(1, 3):
+        fig.update_xaxes(AXIS_STYLE, row=1, col=i)
+        fig.update_yaxes(AXIS_STYLE, row=1, col=i)
     
     fig.update_layout(
         font=PLOT_FONT,

@@ -121,7 +121,7 @@ def register_callbacks(app):
                 new_Qsc = b.Qsc
 
             b.beta = get_beta(b)
-            
+
             # Calculate results for each selected solver
             results = []
 
@@ -134,7 +134,7 @@ def register_callbacks(app):
                     plot_bearing_shape(b),
                     new_kappa, new_Qsc)
         except Exception as e:
-            print(f"Error in calculation: {e}")
+            print(f"Error: {e}")
             return dash.no_update, dash.no_update, dash.no_update, dash.no_update
     
     @app.callback(

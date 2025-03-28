@@ -129,6 +129,7 @@ class RectangularBearing(BaseBearing):
         self.psc = 0.6e6 + self.pa
         self.x = np.linspace(-self.xa / 2, self.xa / 2, self.nx)
         self.y = np.linspace(-self.ya / 2, self.ya / 2, self.ny)
+        self.geom = get_geom(self) # calculate after x y
 
 
 def get_area(bearing):
@@ -147,11 +148,6 @@ def get_area(bearing):
 
     return A
     
-def get_geom(b):
-    """Calculate the geometry of the bearing."""
-    return np.zeros_like(b.ha)
-
-
 def get_geom(bearing):
     """
     Calculate the geometry of the bearing.  
@@ -178,9 +174,9 @@ def get_geom(bearing):
                 case "none":
                     geom = np.zeros((b.nx, b.ny))
                 case "linear":
-                    geom = b.error * (1 - x / b.xa) * (1 - y / b.ya)
+                    geom = b.error * (np.abs(x) / b.xa + np.abs(y) / b.ya)
                 case "quadratic":
-                    geom = b.error * (1 - (x / b.xa)**2) * (1 - (y / b.ya)**2)
+                    geom = b.error * 2 * ((x / b.xa) ** 2 + (y / b.ya) ** 2)
                 case _:
                     raise ValueError(f"Unknown error type: {b.error_type}")
 
@@ -194,10 +190,10 @@ def get_geom(bearing):
                 case "linear":
                     geom = b.error * (1 - r / b.xa)
                 case "quadratic":
-                    geom = b.error * (1 - (r / b.xa)**2)
+                    geom = b.error * (1 - (r / b.xa) ** 2)
                 case _:
                     raise ValueError(f"Unknown error type: {b.error_type}")
-
+                
         else:
             raise ValueError(f"Unknown coordinate system: {b.csys}")
 
