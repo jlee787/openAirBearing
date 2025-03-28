@@ -1,10 +1,8 @@
 from dash import html, dcc
 
 from plots import plot_bearing_shape, plot_key_results
+from config import DEMO_MODE
 
-
-# Demo mode limits maximum number of solution points to a small number
-DEMO_MODE = False
 
 STYLES = {
     'input': {
@@ -16,10 +14,11 @@ STYLES = {
     'input_container': {
         'display': 'grid',
         'grid-template-columns': '200px 100px 20px',  
+        'marginBottom': '20px',
         'gap': '20px',
         'align-items': 'center'
     },
-    'chamber_pressure': {
+    'toggle_container': {
         'display': 'none',
         'grid-template-columns': '200px 100px 20px',
         'marginTop': '20px',
@@ -146,13 +145,13 @@ def create_input_layout(default_bearing):
             dcc.Dropdown(
                 id='case-select',
                 options=[
-                    {'label': 'Circular thrust', 'value': 'Circular thrust'},
-                    {'label': 'Annular thrust', 'value': 'Annular thrust'},
-                    {'label': 'Infinitely long', 'value': 'Infinitely long', 'disabled': False},
-                    {'label': 'Journal', 'value': 'Journal', 'disabled': True},
-                    {'label': 'Rectangluar', 'value': 'Rectangular', 'disabled': True}
+                    {'label': 'Circular thrust', 'value': 'circular'},
+                    {'label': 'Annular thrust', 'value': 'annular'},
+                    {'label': 'Infinitely long', 'value': 'infinite', 'disabled': False},
+                    {'label': 'Rectangular', 'value': 'rectangular', 'disabled': False},
+                    {'label': 'Journal', 'value': 'journal', 'disabled': True},
                 ],
-                value='Circular thrust',
+                value='circular',
                 style={'width': '150px'}
             ), html.Label(""),
                 
@@ -160,7 +159,7 @@ def create_input_layout(default_bearing):
             dcc.Checklist(
                 id='solver-select',
                 options=[
-                    {'label': ' Analytic', 'value': 'analytic', 'disabled': True},
+                    {'label': ' Analytic', 'value': 'analytic', 'disabled': False},
                     {'label': ' Numeric', 'value': 'numeric'},
                 ],
                 value=['analytic'],
@@ -182,17 +181,45 @@ def create_input_layout(default_bearing):
                 style=STYLES['reset_button']
             ),
             
-            html.Label("Bearing radius (mm)"),
-            dcc.Input(id='ra-input', type='number', 
-                        min=0.01, value=default_bearing.ra * 1e3,  # Convert m to mm
+            html.Label("Outer radius / length (mm)"),
+            dcc.Input(id='xa-input', type='number', 
+                        min=0.01, value=default_bearing.xa * 1e3,  # Convert m to mm
                         style=STYLES['input']),
             html.Button(
                 '↺',
-                id='ra-reset',
+                id='xa-reset',
                 title='Reset to default',
                 style=STYLES['reset_button']
             ),
+        ], style=STYLES['input_container']),
+
+        html.Div([
+        html.Label("Inner radius (mm)"),
+            dcc.Input(id='xc-input', type='number', 
+                        min=0.01, value=default_bearing.xc * 1e3,  # Convert m to mm
+                        style=STYLES['input']),
+            html.Button(
+                '↺',
+                id='xc-reset',
+                title='Reset to default',
+                style=STYLES['reset_button']
+            ),
+        ], id='xc-container', style=STYLES['toggle_container']),
+
+        html.Div([
+        html.Label("Length (mm)"),
+            dcc.Input(id='ya-input', type='number', 
+                        min=0.01, value=default_bearing.ya * 1e3,  # Convert m to mm
+                        style=STYLES['input']),
+            html.Button(
+                '↺',
+                id='ya-reset',
+                title='Reset to default',
+                style=STYLES['reset_button']
+            ),
+        ], id='ya-container', style=STYLES['toggle_container']),
             
+        html.Div([
             html.Label("Permeability (m^2)"),
             dcc.Input(id='kappa-input', type='number', 
                 value=default_bearing.kappa,
@@ -310,7 +337,7 @@ def create_input_layout(default_bearing):
                 title='Reset to default',
                 style=STYLES['reset_button']
             )
-        ], id='chamber-pressure-container', style=STYLES['chamber_pressure']),
+        ], id='pc-container', style=STYLES['toggle_container']),
      
         html.H4("Fluid properties"),
         html.Div([                    
@@ -360,29 +387,42 @@ def create_input_layout(default_bearing):
                 style=STYLES['reset_button']
             ),
 
-            html.Label("Number of Radial Points"),
-            dcc.Input(id='nr-input', type='number', value=default_bearing.nr,
-                    min=3, max=100 if DEMO_MODE else None,
-                    step=1, style=STYLES['input']),
+            html.Label("Number of height points"),
+            dcc.Input(id='nh-input', type='number',
+                min=3, max=100 if DEMO_MODE else None,
+                step=1, value=default_bearing.nh,
+                style=STYLES['input']),
             html.Button(
                 '↺',
-                id='nr-reset',
+                id='nh-reset',
                 title='Reset to default',
                 style=STYLES['reset_button']
             ),
 
-            html.Label("Number of Height Points"),
-            dcc.Input(id='ha-n-input', type='number',
-                min=3, max=100 if DEMO_MODE else None,
-                step=1, value=default_bearing.n_ha,
-                style=STYLES['input']),
+            html.Label("Number of x direction points"),
+            dcc.Input(id='nx-input', type='number', value=default_bearing.nx,
+                    min=3, max=100 if DEMO_MODE else None,
+                    step=1, style=STYLES['input']),
             html.Button(
                 '↺',
-                id='ha-n-reset',
+                id='nx-reset',
                 title='Reset to default',
                 style=STYLES['reset_button']
             ),
-        ], style=STYLES['input_container']),  
+        ], style=STYLES['input_container']),
+
+        html.Div([
+             html.Label("Number of y direction points"),
+            dcc.Input(id='ny-input', type='number', value=default_bearing.ny,
+                    min=3, max=100 if DEMO_MODE else None,
+                    step=1, style=STYLES['input']),
+            html.Button(
+                '↺',
+                id='ny-reset',
+                title='Reset to default',
+                style=STYLES['reset_button']
+            )
+        ], id='ny-container', style=STYLES['toggle_container']),
     ], style=STYLES['input_column'])
     
 def create_results_layout(bearing, results):
@@ -394,7 +434,6 @@ def create_results_layout(bearing, results):
     """
     return html.Div([
         html.Div([
-            # Right side - Bearing shape plot
             html.H3("Bearing shape", style={'margin': '0'}),
             dcc.Graph(
                 id='bearing-shape',
@@ -406,7 +445,6 @@ def create_results_layout(bearing, results):
         # Spacer
         html.Div(style={'height': '20px'}),
 
-        # Results section remains the same
         html.Div([
             html.H3("Results", style={'margin': '0'}),
             dcc.Graph(

@@ -2,11 +2,9 @@ import dash
 
 from layouts import create_layout
 from callbacks import register_callbacks
-from airbearings import (
-    CircularBearing,
-    solve_bearing,
-    ANALYTIC
-)
+from bearings import CircularBearing
+from solvers import solve_bearing
+from config import ANALYTIC
 
 # Define input fields with default values 
 default_bearing = CircularBearing()
