@@ -408,16 +408,6 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
     diag_north = (eps_n / dy[None, :] ** 2).flatten('F')[:-N]
     diag_south = (eps_s / dy[None, :] ** 2).flatten('F')[N:]
 
-    # print(diag_center.shape, diag_west.shape, diag_east.shape, diag_north.shape, diag_south.shape)
-    # diag_center = (- 2 * eps * (1 / dx[:, None] ** 2 + 1 / dy[None, :] ** 2) + porous_source).flatten()
-    # diag_x = (eps / dx[:, None] ** 2).flatten()
-    # diag_y = (eps / dy[None, :] ** 2).flatten()
-  
-    # diag_west = diag_x[:-1].copy()
-    # diag_east = diag_x[1:].copy()
-    # diag_south = diag_y[N:].copy()
-    # diag_north = diag_y[:-N].copy()
-
     diag_east[N-1::N] = 0
     diag_west[N-2::N] = 0
     
