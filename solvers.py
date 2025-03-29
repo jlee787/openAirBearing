@@ -131,8 +131,8 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
         #elif soltype == NUMERIC:
         h = b.ha[None, None, :] + b.geom.T[:, :, None]
 
-        qx = (-6e4 * h**3 * b.rho * b.dy[:, None, None] * np.gradient(p**2, axis=1)) / (12 * b.mu * b.pa * b.dx[None, :, None])
-        qy = (-6e4 * h**3 * b.rho * b.dx[None, :, None] * np.gradient(p**2, axis=0)) / (12 * b.mu * b.pa * b.dy[:, None, None])
+        qx = (-6e4 * h ** 3 * b.rho * b.dy[:, None, None] * np.gradient(p ** 2, axis=1)) / (12 * b.mu * b.pa * b.dx[None, :, None])
+        qy = (-6e4 * h ** 3 * b.rho * b.dx[None, :, None] * np.gradient(p ** 2, axis=0)) / (12 * b.mu * b.pa * b.dy[:, None, None])
 
         qa = np.sum(np.abs(qx[:, (0, -1), :]), axis = (0, 1)) + np.sum(abs(qy[(0, -1), :, :]), axis = (0, 1))
         qc = 0
@@ -314,43 +314,43 @@ def get_pressure_2d_numeric(bearing):
     # Porous feeding terms
     porous_source = - kappa / (2 * b.hp * b.mu)
 
-    for i, h in enumerate(b.ha):
-        h += b.geom
+    for i, ha in enumerate(b.ha):
+        h = ha + b.geom
         if b.csys == "polar":
-            epsilon = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
+            #epsilon = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
             coefficient = sp.diags(1 / b.x, 0)
         elif b.csys == "cartesian":
-            epsilon = (1 + b.Psi) * h**3 / (24 * b.mu)
+            epsilon = (1 + b.Psi) * h ** 3 / (24 * b.mu)
             coefficient = 1
 
         # boundary conditions
         if b.case == "rectangular":
             bc = {
-                "left": "Dirichlet",
-                "right": "Dirichlet",
-                "top": "Dirichlet",
-                "bottom": "Dirichlet"
+                "west": "Dirichlet",
+                "east": "Dirichlet",
+                "north": "Dirichlet",
+                "south": "Dirichlet"
             }
         elif b.case == "circular":
             bc = {
-                "left": "Neumann",
-                "right": "Dirichlet",
-                "top": "Periodic",
-                "bottom": "Periodic"
+                "west": "Neumann",
+                "east": "Dirichlet",
+                "north": "Periodic",
+                "south": "Periodic"
             }
         elif b.case == "annular":
             bc = {
-            "left": "Dirichlet",
-            "right": "Dirichlet",
-            "top": "Periodic",
-            "bottom": "Periodic"
+            "west": "Dirichlet",
+            "east": "Dirichlet",
+            "north": "Periodic",
+            "south": "Periodic"
             }
 
         # Build the 2D differential matrix
         A = build_2d_diff_matrix(
             coef=coefficient, 
             eps=epsilon,
-            porous_source=porous_source.flatten(), 
+            porous_source=porous_source, 
             dx=b.dx, 
             dy=b.dy, 
             bc=bc,
@@ -361,16 +361,15 @@ def get_pressure_2d_numeric(bearing):
         # Right-hand side (forcing term)
         f = (b.ps**2 * porous_source).flatten()
 
-        if bc["left"] == "Dirichlet":
+        if bc["west"] == "Dirichlet":
             f[0::N] = b.pa**2
-        if bc["right"] == "Dirichlet":
+        if bc["east"] == "Dirichlet":
             f[N-1::N] = b.pa**2
-        if bc["top"] == "Dirichlet":
+        if bc["north"] == "Dirichlet":
             f[-N:] = b.pa**2
-        if bc["bottom"] == "Dirichlet":
+        if bc["south"] == "Dirichlet":
             f[:N] = b.pa**2
-        
-    
+
         # Solve the linear system
         A = A.tocsr()
         p_flat = spla.spsolve(A, f)
@@ -385,7 +384,7 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
 
     Args:
         coef (np.ndarray): Coefficient matrix.
-        eps (np.ndarray): Epsilon matrix (variable coefficients).
+        eps (np.ndarray): Epsilon matrix (variable coefficients) (N,M).
         dr (np.ndarray): Radial grid spacing.
         dx (np.ndarray): angular grid spacing.
         bc (dict): Dictionary specifying boundary conditions for "left", "right", "top", and "bottom".
@@ -393,64 +392,72 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
     Returns:
         sp.csr_matrix: Sparse matrix representing the 2D differential operator.
     """
+    eps_x = (eps[:-1, :] + eps[1:, :]) / 2
+    eps_y = (eps[:, :-1] + eps[:, 1:]) / 2
+    print(eps.shape, eps_x.shape, eps_y.shape)
+    print(dx.shape, dy.shape)
 
-    # Compute epsilon at half-points
-    eps_half_x = (eps[:-1, :] + eps[1:, :]) / 2
-    eps_half_y = (eps[:, :-1] + eps[:, 1:]) / 2
+    eps_w = np.vstack([eps_x, np.zeros((1, M))])
+    eps_e = np.vstack([np.zeros((1, M)), eps_x])
+    eps_s = np.hstack([eps_y, np.zeros((N, 1))])
+    eps_n = np.hstack([np.zeros((N, 1)), eps_y])
 
-    # Initialize diagonals for the sparse matrix
-    diag_main = np.zeros(N * M) 
-    diag_x_right = np.zeros(N * M - 1)
-    diag_x_left = np.zeros(N * M - 1) 
-    diag_y_up = np.zeros((N - 1) * M) 
-    diag_y_down = np.zeros((N - 1) * M)  
+    diag_center = (-((eps_w + eps_e) / dx[:, None] ** 2 + (eps_n + eps_s) / dy[None, :] ** 2) + porous_source).flatten('F')
+    diag_west = (eps_w / dx[:, None] ** 2).flatten('F')[:-1]
+    diag_east = (eps_e / dx[:, None] ** 2).flatten('F')[1:]
+    diag_north = (eps_n / dy[None, :] ** 2).flatten('F')[:-N]
+    diag_south = (eps_s / dy[None, :] ** 2).flatten('F')[N:]
 
-    diag = -2 * eps.flatten() * (1 / np.tile(dx, M)**2 + 1 / np.repeat(dy, N)**2) + porous_source
-    diag_x = eps.flatten() / np.tile(dx, M)**2
-    diag_y = eps.flatten() / np.repeat(dy, N)**2
+    # print(diag_center.shape, diag_west.shape, diag_east.shape, diag_north.shape, diag_south.shape)
+    # diag_center = (- 2 * eps * (1 / dx[:, None] ** 2 + 1 / dy[None, :] ** 2) + porous_source).flatten()
+    # diag_x = (eps / dx[:, None] ** 2).flatten()
+    # diag_y = (eps / dy[None, :] ** 2).flatten()
+  
+    # diag_west = diag_x[:-1].copy()
+    # diag_east = diag_x[1:].copy()
+    # diag_south = diag_y[N:].copy()
+    # diag_north = diag_y[:-N].copy()
+
+    diag_east[N-1::N] = 0
+    diag_west[N-2::N] = 0
     
-    diag_main = diag
-    diag_x_right = diag_x[:-1].copy()
-    diag_x_left = diag_x[1:].copy()
-    diag_y_up = diag_y[N-1:].copy()
-    diag_y_down = diag_y[:1-N].copy()
+    diag_east[:N] = 0
+    diag_east[-N:] = 0
 
-    diag_x_left[::N] = 0
-    diag_x_left[N-1::N] = 0
+    diag_west[:N] = 0
+    diag_west[-N:] = 0
 
-    diag_x_right[N-1::N] = 0
-    diag_x_right[N-2::N] = 0
-    
-    diag_x_left[:N] = 0
-    diag_x_left[-N:] = 0
+    diag_south[::N] = 0
+    diag_south[N-1::N] = 0
 
-    diag_x_right[:N] = 0
-    diag_x_right[-N:] = 0
+    diag_north[::N] = 0
+    diag_north[N-1::N] = 0
 
-    diag_y_up[::N] = 0
-    diag_y_up[N-1::N] = 0
-
-    diag_y_down[-N:] = 0
-    diag_y_up[:N] = 0
-
-    diag_y_down[::N] = 0
-    diag_y_down[N-1::N] = 0
-
-
-    if bc["left"] == "Dirichlet":
-        diag_main[0::N] = 1
-    if bc["right"] == "Dirichlet":
-        diag_main[N-1::N] = 1
-    if bc["top"] == "Dirichlet":
-        diag_main[-N:] = 1
-    if bc["bottom"] == "Dirichlet":
-        diag_main[:N] = 1
+    if bc["west"] == "Dirichlet":
+        diag_center[0::N] = 1
+        diag_east[::N] = 0
+    if bc["east"] == "Dirichlet":
+        diag_center[N-1::N] = 1
+        diag_west[N-1::N] = 0
+    if bc["north"] == "Dirichlet":
+        diag_center[-N:] = 1
+        diag_south[-N:] = 0
+    if bc["south"] == "Dirichlet":
+        diag_center[:N] = 1
+        diag_north[:N] = 0
 
     L_mat = sp.diags(
-        [diag_main, diag_x_left, diag_x_right, diag_y_up, diag_y_down],
+        [diag_center, diag_east, diag_west, diag_north, diag_south],
         [0, 1, -1, N, -N],
         format="csr"
     )
+    
+    try:
+        plt.figure()
+        plt.spy(L_mat)
+        plt.show()
+    except Exception as e:
+        print(f"Error plotting sparse matrix: {e}")
 
     # Handle scalar coefficients
     if isinstance(coef, (float, int)):
@@ -458,17 +465,17 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
     else:
         return coef @ L_mat
 
-
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import plots
 
- 
-
-    bearing = RectangularBearing()
-    result = solve_bearing(bearing, NUMERIC)
+    bearing = RectangularBearing(nx=5, ny=7, error_type="quadratic", error=1e-6)
+    b = bearing
+    # A = np.sum(b.dx[None, :, None] * b.dy[:, None, None])
+    # print(b.A, A)
+    result = solve_bearing(b, NUMERIC)
     
-    figure = plots.plot_key_results(bearing, result)
+    figure = plots.plot_key_results(b, result)
     # figure = plots.plot_bearing_shape(bearing)
     figure.show()
 

@@ -52,11 +52,11 @@ class BaseBearing:
     csys: str = "cartesian"
 
     def __post_init__(self):
+        self.ha = np.linspace(self.ha_min, self.ha_max, self.nh).T
         self.x = np.linspace(self.xc, self.xa, self.nx)
-        self.y = np.linspace(self.xc, self.xa, self.ny)
+        self.y = np.linspace(0, self.ya, self.ny)
         self.dx = np.gradient(self.x)
         self.dy = 1 if self.ny == 1 else np.gradient(self.y)
-        self.ha = np.linspace(self.ha_min, self.ha_max, self.nh).T
         self.A = get_area(self)
         self.geom = get_geom(self)
         self.kappa = get_kappa(self)
@@ -103,7 +103,7 @@ class InfiniteLinearBearing(BaseBearing):
     csys: str = "cartesian"
 
     xa: float = 40e-3 
-    Qsc: float = 100  # L/min
+    Qsc: float = 40  # L/min
 
     def __post_init__(self):
         super().__post_init__()
@@ -122,11 +122,13 @@ class RectangularBearing(BaseBearing):
     nx: int = 40
     ny: int = 20
 
-    Qsc: float = 8  # L/min
+    ps: float = 0.41e6
+
+    Qsc: float = 2.94  # L/min
 
     def __post_init__(self):
         super().__post_init__()
-        self.psc = 0.6e6 + self.pa
+        self.psc = 0.41e6 + self.pa
         self.x = np.linspace(-self.xa / 2, self.xa / 2, self.nx)
         self.y = np.linspace(-self.ya / 2, self.ya / 2, self.ny)
         self.geom = get_geom(self) # calculate after x y

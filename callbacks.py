@@ -125,7 +125,7 @@ def register_callbacks(app):
             # Calculate results for each selected solver
             results = []
 
-            if 'analytic' in solvers:
+            if 'analytic' in solvers and b.case != "rectangular":
                 results.append(solve_bearing(b, soltype=ANALYTIC))
             if 'numeric' in solvers:
                 results.append(solve_bearing(b, soltype=NUMERIC))
