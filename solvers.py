@@ -392,22 +392,24 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
     Returns:
         sp.csr_matrix: Sparse matrix representing the 2D differential operator.
     """
+    # Compute epsilon at half-points
     eps_x = (eps[:-1, :] + eps[1:, :]) / 2
     eps_y = (eps[:, :-1] + eps[:, 1:]) / 2
-    print(eps.shape, eps_x.shape, eps_y.shape)
-    print(dx.shape, dy.shape)
 
+    # pad stencil epsilon to match the size of the matrix
     eps_w = np.vstack([eps_x, np.zeros((1, M))])
     eps_e = np.vstack([np.zeros((1, M)), eps_x])
     eps_s = np.hstack([eps_y, np.zeros((N, 1))])
     eps_n = np.hstack([np.zeros((N, 1)), eps_y])
 
+    # Form sparse matrix diagonals
     diag_center = (-((eps_w + eps_e) / dx[:, None] ** 2 + (eps_n + eps_s) / dy[None, :] ** 2) + porous_source).flatten('F')
     diag_west = (eps_w / dx[:, None] ** 2).flatten('F')[:-1]
     diag_east = (eps_e / dx[:, None] ** 2).flatten('F')[1:]
     diag_north = (eps_n / dy[None, :] ** 2).flatten('F')[:-N]
     diag_south = (eps_s / dy[None, :] ** 2).flatten('F')[N:]
 
+    # Boundary conditions
     diag_east[N-1::N] = 0
     diag_west[N-2::N] = 0
     
@@ -435,20 +437,13 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
     if bc["south"] == "Dirichlet":
         diag_center[:N] = 1
         diag_north[:N] = 0
-
+    
     L_mat = sp.diags(
         [diag_center, diag_east, diag_west, diag_north, diag_south],
         [0, 1, -1, N, -N],
         format="csr"
     )
     
-    try:
-        plt.figure()
-        plt.spy(L_mat)
-        plt.show()
-    except Exception as e:
-        print(f"Error plotting sparse matrix: {e}")
-
     # Handle scalar coefficients
     if isinstance(coef, (float, int)):
         return coef * L_mat
