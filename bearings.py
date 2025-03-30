@@ -162,9 +162,9 @@ def get_geom(bearing):
             case "none":
                 geom = np.zeros(b.nx)
             case "linear":
-                geom = b.error * (1 - b.x / b.xa) #- np.min(b.error * (1 - b.x**2 / b.xa**2))
+                geom = b.error * (1 - b.x / b.xa)
             case "quadratic":
-                geom = b.error * (1 - b.x**2 / b.xa**2) #- np.min(b.error * (1 - b.x**2 / b.xa**2))
+                geom = b.error * (1 - b.x**2 / b.xa**2)
             case _:
                 raise ValueError(f"Unknown error type: {b.error_type}")
 

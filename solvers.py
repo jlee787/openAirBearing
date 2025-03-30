@@ -60,7 +60,7 @@ def get_dA(bearing) -> np.ndarray:
                 dA = np.pi * np.gradient(b.x**2)
                 dA[[1, -1]] = dA[[1, -1]] / 2
             case "cartesian":
-                dA = b.dx
+                dA = b.dx.copy()
                 dA[[1, -1]] = dA[[1, -1]] / 2
             case _:
                 raise ValueError("Error: invalid csys in dA calculation")
@@ -139,8 +139,6 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
         elif b.csys == "cartesian":
             q = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=0) / 
                  (12 * b.mu * b.pa * b.dx[:, None]))
-            if soltype == NUMERIC:
-                q = q / 2 ### why?
         else:
             raise ValueError("Invalid csys")
         
@@ -244,7 +242,7 @@ def get_pressure_numeric(bearing):
     
     # porous feeding terms
     porous_source = - kappa / (2 * b.hp * b.mu)
-    
+
     for i in range(len(b.ha)):
         h = b.ha[i] + b.geom
         
@@ -304,7 +302,6 @@ def build_diff_matrix(coef: np.ndarray, eps: np.ndarray, dr: np.ndarray) -> sp.c
 
     # Assemble sparse matrix
     L_mat = sp.diags([diag_lower, diag_main, diag_upper], [-1, 0, 1], format="csr")
-
     # Handle also scalar coefficients
     if isinstance(coef, (float, int)):
         return coef * L_mat
@@ -482,6 +479,11 @@ if __name__ == "__main__":
         A = np.sum(get_dA(b))
         print(b.A - A)
 
+
+    b = InfiniteLinearBearing()
+    result = [solve_bearing(b, ANALYTIC), solve_bearing(b, NUMERIC)]
+    figure = plots.plot_key_results(b, result)
+    figure.show()
     # bearing = RectangularBearing(nx=5, ny=7, error_type="quadratic", error=1e-6)
     # b = bearing
     # result = solve_bearing(b, NUMERIC)
