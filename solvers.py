@@ -58,21 +58,21 @@ def get_dA(bearing) -> np.ndarray:
         match b.csys:
             case "polar":
                 dA = np.pi * np.gradient(b.x**2)
-                dA[[1, -1]] = dA[[1, -1]] / 2
+                dA[[0, -1]] = dA[[0, -1]] / 2
             case "cartesian":
                 dA = b.dx.copy()
-                dA[[1, -1]] = dA[[1, -1]] / 2
+                dA[[0, -1]] = dA[[0, -1]] / 2
             case _:
                 raise ValueError("Error: invalid csys in dA calculation")
     else:
         match b.csys:
             case "polar":
                 dA = np.pi * np.gradient(b.x**2)[None, :] * b.dy[:, None]
-                dA[[1, -1], :] = dA[[1, -1], :] / 2
+                dA[[0, -1], :] = dA[[0, -1], :] / 2
             case "cartesian":
                 dA = b.dx[None, :,] * b.dy[:, None]
-                dA[[1, -1], :] = dA[[1, -1], :] / 2
-                dA[:, [1, -1]] = dA[:, [1, -1]] / 2
+                dA[[0, -1], :] = dA[[0, -1], :] / 2
+                dA[:, [0, -1]] = dA[:, [0, -1]] / 2
             case _:
                 raise ValueError("Error: invalid csys in dA calculation")
     return dA
