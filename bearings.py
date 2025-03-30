@@ -14,14 +14,14 @@ class BaseBearing:
 
     hp: float = 4.5e-3
     
-    ha_min: float = 0.5e-6
-    ha_max: float = 30e-6
+    ha_min: float = 1e-6
+    ha_max: float = 20e-6
     
     xa: float = 37 / 2 *1e-3
     xc: float = 0
     ya: float = 0
-    nh: int = 25
-    nx: int = 20
+    nh: int = 19
+    nx: int = 30
     ny: int = 1
 
     Psi: float = 0
@@ -102,12 +102,14 @@ class InfiniteLinearBearing(BaseBearing):
     type: str = "seal"
     csys: str = "cartesian"
 
+    ps: float = 0.41e6
     xa: float = 40e-3 
-    Qsc: float = 40  # L/min
+
+    Qsc: float = 37  # L/min
 
     def __post_init__(self):
         super().__post_init__()
-        self.psc = 0.6e6 + self.pa
+        self.psc = 0.41e6 + self.pa
 
 @dataclass
 class RectangularBearing(BaseBearing):

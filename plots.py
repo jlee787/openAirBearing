@@ -397,6 +397,7 @@ def plot_bearing_shape(bearing):
 
             fig.update_yaxes( 
                 range=[0, 1000],
+                row=1, col=1
             )
 
             fig.update_xaxes( 
@@ -547,18 +548,18 @@ def plot_bearing_shape(bearing):
                 row=1, col=2
             )
 
-            fig.update_xaxes( 
-                title="r (mm)",
-                range=[(x[-1] - x[-1] * 1.1 if x[1] == 0 else x[1] * 1.1), x[-1] * 1.1],
-                row=1,
-                col=2
-            )
-            fig.update_yaxes(
-                title="Shape (μm)",
-                range=[-0.5 - 0.3e6 * abs(b.error), 1 + np.max(b.geom) * 1e6],
-                row=1,
-                col=2
-            )
+        fig.update_xaxes( 
+            title="x (mm)",
+            range=[(x[-1] - x[-1] * 1.1 if x[1] == 0 else x[1] * 1.1), x[-1] * 1.1],
+            row=1,
+            col=2
+        )
+        fig.update_yaxes(
+            title="Shape (μm)",
+            range=[-0.5 - 0.3e6 * abs(b.error), 1 + np.max(b.geom) * 1e6],
+            row=1,
+            col=2
+        )
 
     for i in range(1, 3):
         fig.update_xaxes(AXIS_STYLE, row=1, col=i)

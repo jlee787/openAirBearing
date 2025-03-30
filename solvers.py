@@ -46,11 +46,36 @@ def solve_bearing(bearing, soltype: bool) -> Result:
         else:
             p = get_pressure_numeric(bearing)
 
-    w = get_load_capacity(bearing, p)
-    k = get_stiffness(bearing, w)
+    w = get_load_capacity(bearing=bearing, p=p)
+    k = get_stiffness(bearing=bearing, w=w)
     qs, qa, qc = get_volumetric_flow(bearing=bearing, p=p, soltype=soltype)
 
     return Result(name=name, p=p, w=w, k=k, qs=qs, qa=qa, qc=qc)
+
+def get_dA(bearing) -> np.ndarray:
+    b = bearing
+    if b.ny == 1:
+        match b.csys:
+            case "polar":
+                dA = np.pi * np.gradient(b.x**2)
+                dA[[1, -1]] = dA[[1, -1]] / 2
+            case "cartesian":
+                dA = b.dx
+                dA[[1, -1]] = dA[[1, -1]] / 2
+            case _:
+                raise ValueError("Error: invalid csys in dA calculation")
+    else:
+        match b.csys:
+            case "polar":
+                dA = np.pi * np.gradient(b.x**2)[None, :] * b.dy[:, None]
+                dA[[1, -1], :] = dA[[1, -1], :] / 2
+            case "cartesian":
+                dA = b.dx[None, :,] * b.dy[:, None]
+                dA[[1, -1], :] = dA[[1, -1], :] / 2
+                dA[:, [1, -1]] = dA[:, [1, -1]] / 2
+            case _:
+                raise ValueError("Error: invalid csys in dA calculation")
+    return dA
 
 def get_load_capacity(bearing, p: np.ndarray) -> np.ndarray:
     """
@@ -63,18 +88,12 @@ def get_load_capacity(bearing, p: np.ndarray) -> np.ndarray:
         numpy.ndarray: The calculated load capacity.
     """
     b = bearing
+    dA = get_dA(b)
+    p_rel = (p - b.pa)
     if b.ny == 1:
-        match bearing.csys:
-            case "polar":
-                w = np.sum(np.pi * (p - b.pa) * np.gradient(b.x**2)[:, None], axis=0)
-            case "cartesian":
-                w = (np.sum((p - b.pa) * b.dx[:, None], axis=0))
+        w = np.sum(p_rel * dA[:, None], axis=0)
     else:
-        match bearing.csys:
-            case "polar":
-                w = np.sum(np.pi * (p - b.pa) * np.gradient(b.x**2)[None, :, None] * b.dy[:, None, None], axis=(0, 1))
-            case "cartesian":
-                w = np.sum((p - b.pa) * (b.dx[None, :, None] * b.dy[:, None, None]), axis=(0, 1))
+        w = np.sum(p_rel * dA[:, :, None], axis=(0, 1))
     return w
 
 def get_stiffness(bearing, w):
@@ -106,37 +125,42 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
             - qc (np.ndarray): Chamber flow rate (L/min)
     """
     b = bearing
-
     if b.ny == 1:
         if soltype == ANALYTIC:
             h = b.ha
+            # print("a: ", p[[0, 1],-1]*1e-6)
         elif soltype == NUMERIC:
             h = b.ha + b.geom[:, None]
+            # print("n: ", p[[0, 1],-1]*1e-6)
+       
         if b.csys == "polar":
-            q = (-6e4 * np.pi * h**3 * b.x[:, None] * b.rho *
-                    np.gradient(p**2, axis=0) / (12 * b.mu * b.pa * b.dx[:, None]))
+            q = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=0) * np.pi * b.x[:, None] / 
+                 (12 * b.mu * b.pa * b.dx[:, None]))
         elif b.csys == "cartesian":
-            q = (-6e4 * h**3 * b.dy * b.rho *
-                    np.gradient(p**2, axis=0) / (12 * b.mu * b.pa * b.dx[:, None]))
+            q = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=0) / 
+                 (12 * b.mu * b.pa * b.dx[:, None]))
+            if soltype == NUMERIC:
+                q = q / 2 ### why?
         else:
             raise ValueError("Invalid csys")
         
         qa = q[-1, :]
         qc = q[1, :]
         qs = qa - qc
-
     else:
-        #if soltype == ANALYTIC:
-        #    raise TypeError("Analytic 2d attempted")
-        #elif soltype == NUMERIC:
-        h = b.ha[None, None, :] + b.geom.T[:, :, None]
+        if soltype == ANALYTIC:
+            raise TypeError("Analytic 2d attempted")
+        if soltype == NUMERIC:
+            h = b.ha[None, None, :] + b.geom.T[:, :, None]
 
-        qx = (-6e4 * h ** 3 * b.rho * b.dy[:, None, None] * np.gradient(p ** 2, axis=1)) / (12 * b.mu * b.pa * b.dx[None, :, None])
-        qy = (-6e4 * h ** 3 * b.rho * b.dx[None, :, None] * np.gradient(p ** 2, axis=0)) / (12 * b.mu * b.pa * b.dy[:, None, None])
+            qx = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=1) * b.dy[:, None, None] /
+                  (12 * b.mu * b.pa * b.dx[None, :, None]))
+            qy = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=0) * b.dx[None, :, None] /
+                  (12 * b.mu * b.pa * b.dy[:, None, None]))
 
-        qa = np.sum(np.abs(qx[:, (0, -1), :]), axis = (0, 1)) + np.sum(abs(qy[(0, -1), :, :]), axis = (0, 1))
-        qc = 0
-        qs = qa - qc
+            qa = np.sum(np.abs(qx[:, (0, -1), :]), axis = (0, 1)) + np.sum(abs(qy[(0, -1), :, :]), axis = (0, 1))
+            qc = 0
+            qs = qa - qc
     return qs, qa, qc
 
 
@@ -454,14 +478,16 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import plots
 
-    bearing = RectangularBearing(nx=5, ny=7, error_type="quadratic", error=1e-6)
-    b = bearing
-    # A = np.sum(b.dx[None, :, None] * b.dy[:, None, None])
-    # print(b.A, A)
-    result = solve_bearing(b, NUMERIC)
+    for b in [CircularBearing(), AnnularBearing(), InfiniteLinearBearing(), RectangularBearing()]:
+        A = np.sum(get_dA(b))
+        print(b.A - A)
+
+    # bearing = RectangularBearing(nx=5, ny=7, error_type="quadratic", error=1e-6)
+    # b = bearing
+    # result = solve_bearing(b, NUMERIC)
     
-    figure = plots.plot_key_results(b, result)
-    # figure = plots.plot_bearing_shape(bearing)
-    figure.show()
+    # figure = plots.plot_key_results(b, result)
+    # # figure = plots.plot_bearing_shape(bearing)
+    # figure.show()
 
   
