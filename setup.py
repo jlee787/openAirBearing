@@ -33,7 +33,7 @@ setup(
     install_requires=[
         "dash>=2.0.0,<3.0.0",
         "numpy>=1.21.0,<2.0.0",
-        "plotly>=5.0.0,<6.0.0",
+        "plotly>=6.0.0,<7.0.0",
         "scipy>=1.7.0,<2.0.0",
     ],
     classifiers=[
