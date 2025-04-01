@@ -1,10 +1,10 @@
 import dash
 
-from layouts import create_layout
-from callbacks import register_callbacks
-from bearings import CircularBearing
-from solvers import solve_bearing
-from config import ANALYTIC
+from openairbearing.app.layouts import create_layout
+from openairbearing.app.callbacks import register_callbacks
+from openairbearing.bearings import CircularBearing
+from openairbearing.solvers import solve_bearing
+from openairbearing.config import ANALYTIC
 
 # Define input fields with default values 
 default_bearing = CircularBearing()
@@ -51,5 +51,8 @@ app.index_string = '''
 </html>
 '''
 
-if __name__ == '__main__':   
+def main():
     app.run_server(debug=True)
+
+if __name__ == '__main__':
+    main()

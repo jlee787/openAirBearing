@@ -1,6 +1,7 @@
 import numpy as np
 from dataclasses import dataclass, field
 
+from openairbearing.utils import get_area, get_geom, get_kappa, get_beta
 
 @dataclass
 class BaseBearing:
@@ -20,7 +21,7 @@ class BaseBearing:
     xa: float = 37 / 2 *1e-3
     xc: float = 0
     ya: float = 0
-    nh: int = 19
+    nh: int = 20
     nx: int = 30
     ny: int = 1
 
@@ -135,114 +136,3 @@ class RectangularBearing(BaseBearing):
         self.y = np.linspace(-self.ya / 2, self.ya / 2, self.ny)
         self.geom = get_geom(self) # calculate after x y
 
-
-def get_area(bearing):
-    b = bearing
-    match b.case:
-        case "circular":
-            A = np.pi * b.xa ** 2
-        case "annular":
-            A = np.pi * (b.xa**2 - b.xc**2)
-        case "infinite":
-            A = b.xa
-        case "rectangular":
-            A = b.xa * b.ya
-        case _:
-            raise ValueError(f"Unknown case: {b.case}")
-
-    return A
-    
-def get_geom(bearing):
-    """
-    Calculate the geometry of the bearing.  
-    """
-    b = bearing
-    if b.ny == 1:
-        match b.error_type:
-            case "none":
-                geom = np.zeros(b.nx)
-            case "linear":
-                geom = b.error * (1 - b.x / b.xa)
-            case "quadratic":
-                geom = b.error * (1 - b.x**2 / b.xa**2)
-            case _:
-                raise ValueError(f"Unknown error type: {b.error_type}")
-
-    else:
-        if b.csys == "cartesian":
-
-            x = b.x[:, None] 
-            y = b.y[None, :]
-
-            match b.error_type:
-                case "none":
-                    geom = np.zeros((b.nx, b.ny))
-                case "linear":
-                    geom = b.error * (np.abs(x) / b.xa + np.abs(y) / b.ya)
-                case "quadratic":
-                    geom = b.error * 2 * ((x / b.xa) ** 2 + (y / b.ya) ** 2)
-                case _:
-                    raise ValueError(f"Unknown error type: {b.error_type}")
-
-        elif b.csys == "polar":
-            r = b.x[:, None]
-            theta = b.y[None, :]
-
-            match b.error_type:
-                case "none":
-                    geom = np.zeros((b.nx, b.ny))
-                case "linear":
-                    geom = b.error * (1 - r / b.xa)
-                case "quadratic":
-                    geom = b.error * (1 - (r / b.xa) ** 2)
-                case _:
-                    raise ValueError(f"Unknown error type: {b.error_type}")
-                
-        else:
-            raise ValueError(f"Unknown coordinate system: {b.csys}")
-
-    return geom - np.min(geom)
-
-def get_beta(bearing):
-    """
-    Calculate the porous feeding parameter.
-
-    Returns:
-        float: The porous feeding parameter, beta.
-    """
-    b = bearing
-    beta = 6 * b.kappa * b.xa**2 / (b.hp * b.ha**3)
-    return beta
-
-def get_kappa(bearing):
-    """
-    Calculate the permeability.
-
-    Returns:
-        float: Permeability, kappa.
-    """
-    b = bearing
-
-    if getattr( b, 'blocked', False):
-        kappa = 2 * b.Qsc / 6e4 * b.mu * b.hp * b.pa / (b.block_A * (b.psc**2 - b.pa**2))
-    else:
-        kappa = 2 * b.Qsc / 6e4 * b.mu * b.hp * b.pa / (b.A * (b.psc**2 - b.pa**2))
-    return round_to_sig_dig(kappa, 3)
-
-def get_Qsc(bearing):
-    """
-    Calculate the permeability.
-
-    Returns:
-        float: Permeability, kappa.
-    """
-    b = bearing
-
-    if b.blocked:
-        Qsc = b.kappa * 6e4 * b.block_A * (b.psc**2 - b.pa**2) / (2 * b.mu * b.hp * b.pa)
-    else:
-        Qsc = b.kappa * 6e4 * b.A * (b.psc**2 - b.pa**2) / (2 * b.mu * b.hp * b.pa)
-    return round_to_sig_dig(Qsc, 3) 
-
-def round_to_sig_dig(number, digits):
-    return np.round(number, -int(np.floor(np.log10(np.abs(number)))) + (digits - 1))

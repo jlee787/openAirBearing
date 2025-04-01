@@ -1,7 +1,7 @@
 from dash import html, dcc
 
-from plots import plot_bearing_shape, plot_key_results
-from config import DEMO_MODE
+from openairbearing.plots import plot_bearing_shape, plot_key_results
+from openairbearing.config import DEMO_MODE
 
 
 STYLES = {

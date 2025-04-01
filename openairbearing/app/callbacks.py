@@ -1,10 +1,11 @@
 from dash.dependencies import Input, Output
 import dash
 
-from plots import plot_bearing_shape, plot_key_results
-from bearings import *
-from solvers import solve_bearing
-from config import ANALYTIC, NUMERIC    
+from openairbearing.plots import plot_bearing_shape, plot_key_results
+from openairbearing.bearings import *
+from openairbearing.solvers import solve_bearing
+from openairbearing.utils import get_kappa, get_Qsc, get_beta
+from openairbearing.config import ANALYTIC, NUMERIC    
 
 def register_callbacks(app):
     """Register all callbacks for the application."""

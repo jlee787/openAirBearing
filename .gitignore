@@ -1,3 +1,5 @@
 .DS_Store
 .venv
 /__pycache__
+/openairbearing/__pycache__
+/openairbearing/app/__pycache__

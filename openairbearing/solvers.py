@@ -5,19 +5,9 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 from scipy.special import i0, k0
 
-from config import ANALYTIC, NUMERIC
-from bearings import *
-
-@dataclass
-class Result:
-    """Class to hold bearing calculation results"""
-    name: str
-    p: np.ndarray
-    w: np.ndarray
-    k: np.ndarray
-    qs: np.ndarray
-    qa: np.ndarray
-    qc: np.ndarray
+from openairbearing.config import ANALYTIC, NUMERIC
+from openairbearing.bearings import *
+from openairbearing.utils import *
 
 def solve_bearing(bearing, soltype: bool) -> Result:
     if soltype == ANALYTIC:
@@ -51,115 +41,6 @@ def solve_bearing(bearing, soltype: bool) -> Result:
     qs, qa, qc = get_volumetric_flow(bearing=bearing, p=p, soltype=soltype)
 
     return Result(name=name, p=p, w=w, k=k, qs=qs, qa=qa, qc=qc)
-
-def get_dA(bearing) -> np.ndarray:
-    b = bearing
-    if b.ny == 1:
-        match b.csys:
-            case "polar":
-                dA = np.pi * np.gradient(b.x**2)
-                dA[[0, -1]] = dA[[0, -1]] / 2
-            case "cartesian":
-                dA = b.dx.copy()
-                dA[[0, -1]] = dA[[0, -1]] / 2
-            case _:
-                raise ValueError("Error: invalid csys in dA calculation")
-    else:
-        match b.csys:
-            case "polar":
-                dA = np.pi * np.gradient(b.x**2)[None, :] * b.dy[:, None]
-                dA[[0, -1], :] = dA[[0, -1], :] / 2
-            case "cartesian":
-                dA = b.dx[None, :,] * b.dy[:, None]
-                dA[[0, -1], :] = dA[[0, -1], :] / 2
-                dA[:, [0, -1]] = dA[:, [0, -1]] / 2
-            case _:
-                raise ValueError("Error: invalid csys in dA calculation")
-    return dA
-
-def get_load_capacity(bearing, p: np.ndarray) -> np.ndarray:
-    """
-    Calculate the load capacity of the bearing.
-
-    Args:
-        p (numpy.ndarray): The pressure distribution.
-
-    Returns:
-        numpy.ndarray: The calculated load capacity.
-    """
-    b = bearing
-    dA = get_dA(b)
-    p_rel = (p - b.pa)
-    if b.ny == 1:
-        w = np.sum(p_rel * dA[:, None], axis=0)
-    else:
-        w = np.sum(p_rel * dA[:, :, None], axis=(0, 1))
-    return w
-
-def get_stiffness(bearing, w):
-    """
-    Calculate the stiffness.
-
-    Args:
-        w (numpy.ndarray): The load or deflection values.
-
-    Returns:
-        numpy.ndarray: The stiffness values.
-    """
-    b = bearing
-    k = -np.gradient(w, b.ha.flatten())
-    return k
-
-def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
-    """Calculate volumetric flow rates through the bearing.
-
-    Args:
-        bearing: Bearing instance containing geometry and properties
-        p (np.ndarray): Pressure distribution array
-        soltype (bool): Solution type (ANALYTIC or NUMERIC)
-
-    Returns:
-        tuple: (qs, qa, qc) where:
-            - qs (np.ndarray): Supply flow rate (L/min)
-            - qa (np.ndarray): Ambient flow rate (L/min)
-            - qc (np.ndarray): Chamber flow rate (L/min)
-    """
-    b = bearing
-    if b.ny == 1:
-        if soltype == ANALYTIC:
-            h = b.ha
-            # print("a: ", p[[0, 1],-1]*1e-6)
-        elif soltype == NUMERIC:
-            h = b.ha + b.geom[:, None]
-            # print("n: ", p[[0, 1],-1]*1e-6)
-       
-        if b.csys == "polar":
-            q = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=0) * np.pi * b.x[:, None] / 
-                 (12 * b.mu * b.pa * b.dx[:, None]))
-        elif b.csys == "cartesian":
-            q = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=0) / 
-                 (12 * b.mu * b.pa * b.dx[:, None]))
-        else:
-            raise ValueError("Invalid csys")
-        
-        qa = q[-1, :]
-        qc = q[1, :]
-        qs = qa - qc
-    else:
-        if soltype == ANALYTIC:
-            raise TypeError("Analytic 2d attempted")
-        if soltype == NUMERIC:
-            h = b.ha[None, None, :] + b.geom.T[:, :, None]
-
-            qx = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=1) * b.dy[:, None, None] /
-                  (12 * b.mu * b.pa * b.dx[None, :, None]))
-            qy = (-6e4 * h ** 3 * b.rho * np.gradient(p ** 2, axis=0) * b.dx[None, :, None] /
-                  (12 * b.mu * b.pa * b.dy[:, None, None]))
-
-            qa = np.sum(np.abs(qx[:, (0, -1), :]), axis = (0, 1)) + np.sum(abs(qy[(0, -1), :, :]), axis = (0, 1))
-            qc = 0
-            qs = qa - qc
-    return qs, qa, qc
 
 
 def get_pressure_analytic_infinite(bearing):
@@ -471,25 +352,3 @@ def build_2d_diff_matrix(coef: np.ndarray, eps: float, porous_source: np.ndarray
     else:
         return coef @ L_mat
 
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    import plots
-
-    for b in [CircularBearing(), AnnularBearing(), InfiniteLinearBearing(), RectangularBearing()]:
-        A = np.sum(get_dA(b))
-        print(b.A - A)
-
-
-    b = InfiniteLinearBearing()
-    result = [solve_bearing(b, ANALYTIC), solve_bearing(b, NUMERIC)]
-    figure = plots.plot_key_results(b, result)
-    figure.show()
-    # bearing = RectangularBearing(nx=5, ny=7, error_type="quadratic", error=1e-6)
-    # b = bearing
-    # result = solve_bearing(b, NUMERIC)
-    
-    # figure = plots.plot_key_results(b, result)
-    # # figure = plots.plot_bearing_shape(bearing)
-    # figure.show()
-
-  
