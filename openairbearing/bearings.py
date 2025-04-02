@@ -3,9 +3,11 @@ from dataclasses import dataclass, field
 
 from openairbearing.utils import get_area, get_geom, get_kappa, get_beta
 
+
 @dataclass
 class BaseBearing:
     """Base class for all bearing types."""
+
     pa: float = 101325
     pc: float = pa
     ps: float = 0.6e6 + pa
@@ -14,11 +16,11 @@ class BaseBearing:
     mu: float = 1.85e-5
 
     hp: float = 4.5e-3
-    
+
     ha_min: float = 1e-6
     ha_max: float = 20e-6
-    
-    xa: float = 37 / 2 *1e-3
+
+    xa: float = 37 / 2 * 1e-3
     xc: float = 0
     ya: float = 0
     nh: int = 20
@@ -63,9 +65,11 @@ class BaseBearing:
         self.kappa = get_kappa(self)
         self.beta = get_beta(self)
 
+
 @dataclass
 class CircularBearing(BaseBearing):
     """Base class for circular thrust bearing"""
+
     case: str = "circular"
     type: str = "bearing"
     csys: str = "polar"
@@ -77,34 +81,36 @@ class CircularBearing(BaseBearing):
     def __post_init__(self):
         super().__post_init__()
         self.psc = 0.6e6 + self.pa
-       
+
+
 @dataclass
 class AnnularBearing(BaseBearing):
     """Base class for annular bearing"""
-    
+
     case: str = "annular"
     type: str = "seal"
     csys: str = "polar"
-   
+
     xa: float = 58e-3 / 2
     xc: float = 25e-3 / 2
-    
+
     Qsc: float = 3  # L/min
-   
+
     def __post_init__(self):
         super().__post_init__()
         self.psc = 0.6e6 + self.pa
 
+
 @dataclass
 class InfiniteLinearBearing(BaseBearing):
     """Base class for Infinitely long linear bearing bearing"""
-   
+
     case: str = "infinite"
     type: str = "seal"
     csys: str = "cartesian"
 
     ps: float = 0.41e6
-    xa: float = 40e-3 
+    xa: float = 40e-3
 
     Qsc: float = 37  # L/min
 
@@ -112,14 +118,15 @@ class InfiniteLinearBearing(BaseBearing):
         super().__post_init__()
         self.psc = 0.41e6 + self.pa
 
+
 @dataclass
 class RectangularBearing(BaseBearing):
     """Base class for rectangular thrust bearing"""
-   
+
     case: str = "rectangular"
     type: str = "bearing"
     csys: str = "cartesian"
-   
+
     xa: float = 80e-3
     ya: float = 40e-3
     nx: int = 40
@@ -134,5 +141,4 @@ class RectangularBearing(BaseBearing):
         self.psc = 0.41e6 + self.pa
         self.x = np.linspace(-self.xa / 2, self.xa / 2, self.nx)
         self.y = np.linspace(-self.ya / 2, self.ya / 2, self.ny)
-        self.geom = get_geom(self) # calculate after x y
-
+        self.geom = get_geom(self)  # calculate after x y

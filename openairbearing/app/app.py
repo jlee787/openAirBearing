@@ -6,7 +6,7 @@ from openairbearing.bearings import CircularBearing
 from openairbearing.solvers import solve_bearing
 from openairbearing.config import ANALYTIC
 
-# Define input fields with default values 
+# Define input fields with default values
 default_bearing = CircularBearing()
 
 # Initialize bearing and calculate performance
@@ -15,13 +15,12 @@ result = solve_bearing(bearing, soltype=ANALYTIC)
 
 app = dash.Dash(
     __name__,
-    meta_tags=[{
-        'name': 'viewport',
-        'content': 'width=device-width, initial-scale=1.0'
-    }],
-    title='OpenAirBearing',
+    meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1.0"}
+    ],
+    title="OpenAirBearing",
     update_title="Loading...",
-    assets_folder='assets'
+    assets_folder="assets",
 )
 
 # Update app.layout before app.run_server(debug=True):
@@ -30,7 +29,7 @@ app.layout = create_layout(default_bearing, bearing, result)
 # Register callbacks
 register_callbacks(app)
 
-app.index_string = '''
+app.index_string = """
 <!DOCTYPE html>
 <html>
     <head>
@@ -49,10 +48,12 @@ app.index_string = '''
         </footer>
     </body>
 </html>
-'''
+"""
+
 
 def main():
     app.run_server(debug=True)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
