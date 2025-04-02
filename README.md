@@ -1,5 +1,8 @@
 # OpenAirBearing: Open-Source porous gas bearing analysis
 
+[![Unit tests](https://github.com/Aalto-Arotor/openAirBearing/actions/workflows/unittests.yml/badge.svg)](https://github.com/Aalto-Arotor/openAirBearing/actions/workflows/unittests.yml)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Aalto-Arotor/openairbearing/blob/main/LICENSE)
+
 ## Introduciton
 OpenAirbearing includes a backed to model porous bearing performance and a browser GUI to display the results.
 Software can be used online at https://www.openairbearing.com in a limited capability, and in full capability when used locally.
@@ -7,6 +10,8 @@ Software can be used online at https://www.openairbearing.com in a limited capab
 Supported features include:
 * Circular thrust bearings
 * Annular thrust bearings and seals
+* Infinitely long linear bearings and seals
+* Rectangular bearings
 
 ## Mathematical modeling
 Analytical and numerical solutions to reynolds equation in one dimension for common porous gas bearing and seal geometries.

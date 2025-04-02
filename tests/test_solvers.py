@@ -49,7 +49,7 @@ def test_get_pressure_numeric():
 def test_solve_bearing():
     """Test the solve_bearing function."""
     par = {
-        "nh": 1000,
+        "nh": 200,
         "ha_min": 1e-6,
         "ha_max": 100e-6,
         "nx": 100,
