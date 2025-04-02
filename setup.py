@@ -12,8 +12,8 @@ setup(
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Aalto-Arotor/openAirBearing",  
-     project_urls={
+    url="https://github.com/Aalto-Arotor/openAirBearing",
+    project_urls={
         "Online demo": "https://www.openairbearing.com",
     },
     entry_points={
