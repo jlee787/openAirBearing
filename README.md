@@ -1,6 +1,7 @@
 # OpenAirBearing: Open-Source porous gas bearing analysis
 
 [![Unit tests](https://github.com/Aalto-Arotor/openAirBearing/actions/workflows/unittests.yml/badge.svg)](https://github.com/Aalto-Arotor/openAirBearing/actions/workflows/unittests.yml)
+[![Test coverage](https://coveralls.io/repos/github/Aalto-Arotor/openAirBearing/badge.svg?branch=main)](https://coveralls.io/github/Aalto-Arotor/openAirBearing?branch=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Aalto-Arotor/openairbearing/blob/main/LICENSE)
 
