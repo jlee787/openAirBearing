@@ -1,7 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
 
-from openairbearing.config import *
+from openairbearing.config import ANALYTIC, NUMERIC
 
 
 @dataclass

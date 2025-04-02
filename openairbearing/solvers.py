@@ -6,8 +6,12 @@ import scipy.sparse.linalg as spla
 from scipy.special import i0, k0
 
 from openairbearing.config import ANALYTIC, NUMERIC
-from openairbearing.bearings import *
-from openairbearing.utils import *
+from openairbearing.utils import (
+    Result,
+    get_load_capacity,
+    get_stiffness,
+    get_volumetric_flow,
+)
 
 
 def solve_bearing(bearing, soltype: bool) -> Result:

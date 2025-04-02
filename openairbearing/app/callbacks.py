@@ -2,7 +2,12 @@ from dash.dependencies import Input, Output
 import dash
 
 from openairbearing.plots import plot_bearing_shape, plot_key_results
-from openairbearing.bearings import *
+from openairbearing.bearings import (
+    CircularBearing,
+    AnnularBearing,
+    InfiniteLinearBearing,
+    RectangularBearing,
+)
 from openairbearing.solvers import solve_bearing
 from openairbearing.utils import get_kappa, get_Qsc, get_beta
 from openairbearing.config import ANALYTIC, NUMERIC
