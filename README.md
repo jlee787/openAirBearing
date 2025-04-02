@@ -16,7 +16,7 @@ Supported features include:
 * Rectangular bearings
 
 ## Mathematical modeling
-Analytical and numerical solutions to reynolds equation in one dimension for common porous gas bearing and seal geometries.
+Analytical and numerical solutions of the Reynolds equation in one dimension fort most common porous gas bearing and seal geometries.
 Analytical solutions assume ideal geometry, numerical (finite difference method) solutions consider uneven gap height, uneven permeability, and slip at porous-gap interface.
 Implements models from textbooks [1,2] and research of Miettinen et al. [3,4].
 
