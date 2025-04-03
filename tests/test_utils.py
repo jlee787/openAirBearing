@@ -38,7 +38,9 @@ def test_get_geom():
     """Test the get_geom function for different error types."""
     nx = 10
     ny = 5
-    bearing = BaseBearing(case="rectangular", nx=nx, ny=ny, xa=10, ya=5, error_type="none")
+    bearing = BaseBearing(
+        case="rectangular", nx=nx, ny=ny, xa=10, ya=5, error_type="none"
+    )
     geom = get_geom(bearing)
     assert np.all(geom == 0)
 
@@ -100,14 +102,13 @@ def test_get_load_capacity():
     p = np.linspace(101325, 102325, 10)
     w = get_load_capacity(bearing, p)
     assert w.shape == p.shape
-    #assert np.allclose(w, np.sum (p * bearing.dA, axis=0))
+    # assert np.allclose(w, np.sum (p * bearing.dA, axis=0))
 
 
 def test_get_stiffness():
     """Test the get_stiffness function."""
-    nh=40
+    nh = 40
     bearing = BaseBearing(case="circular", ha_min=1e-6, ha_max=20e-6, nh=40)
     w = 2 ** np.linspace(0, 100, nh)
     k = get_stiffness(bearing, w)
     assert np.allclose(k, -np.gradient(w, bearing.ha.flatten()))
-
