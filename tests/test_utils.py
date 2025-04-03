@@ -38,6 +38,25 @@ def test_get_geom():
     """Test the get_geom function for different error types."""
     nx = 10
     ny = 5
+
+    bearing = BaseBearing(
+        case="circular", csys="polar", nx=nx, xa=10, ya=5, error_type="none"
+    )
+    geom = get_geom(bearing)
+    assert np.all(geom == 0)
+
+    bearing.error_type = "linear"
+    geom = get_geom(bearing)
+    assert geom.shape == (nx,)
+
+    bearing.error_type = "quadratic"
+    geom = get_geom(bearing)
+    assert geom.shape == (nx,)
+
+    with pytest.raises(ValueError, match="Unknown error type: invalid"):
+        bearing.error_type = "invalid"
+        get_geom(bearing)
+
     bearing = BaseBearing(
         case="rectangular", nx=nx, ny=ny, xa=10, ya=5, error_type="none"
     )
@@ -91,7 +110,9 @@ def test_get_Qsc():
 
 def test_get_dA():
     """Test the get_dA function."""
-    bearing = BaseBearing(case="circular", nx=10, ny=1, xa=10, csys="cartesian")
+    bearing = BaseBearing(case="circular", csys="polar", nx=10, ny=1, xa=10)
+    dA = get_dA(bearing)
+    bearing = BaseBearing(case="infinite", csys="cartesian", nx=10, ny=1, xa=10)
     dA = get_dA(bearing)
     assert dA.shape == (10,)
 

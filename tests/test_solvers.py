@@ -9,6 +9,7 @@ from openairbearing.solvers import (
     get_pressure_analytic_annular,
     get_pressure_analytic_infinite,
     get_pressure_numeric,
+    get_pressure_2d_numeric,
 )
 
 
@@ -51,6 +52,15 @@ def test_get_pressure_numeric():
     bearing = CircularBearing()
     p = get_pressure_numeric(bearing)
     assert p.shape == (bearing.nx, bearing.nh)
+    e = 1e-6
+    assert np.all(p - bearing.pa > -e)
+    assert np.all(p - bearing.ps < e)
+
+def test_get_pressure_2d_numeric():
+    """Test the numeric pressure distribution for a rectangular bearing."""
+    bearing = RectangularBearing()
+    p = get_pressure_2d_numeric(bearing)
+    assert p.shape == (bearing.ny, bearing.nx, bearing.nh)
     e = 1e-6
     assert np.all(p - bearing.pa > -e)
     assert np.all(p - bearing.ps < e)
