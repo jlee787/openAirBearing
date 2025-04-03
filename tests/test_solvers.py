@@ -56,6 +56,7 @@ def test_get_pressure_numeric():
     assert np.all(p - bearing.pa > -e)
     assert np.all(p - bearing.ps < e)
 
+
 def test_get_pressure_2d_numeric():
     """Test the numeric pressure distribution for a rectangular bearing."""
     bearing = RectangularBearing()

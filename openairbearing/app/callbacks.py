@@ -13,22 +13,23 @@ from openairbearing.utils import get_kappa, get_Qsc, get_beta
 from openairbearing.config import ANALYTIC, NUMERIC
 
 
+def get_bearing(case):
+    """Return default bearing instance based on case."""
+    match case:
+        case "circular":
+            return CircularBearing
+        case "annular":
+            return AnnularBearing
+        case "infinite":
+            return InfiniteLinearBearing
+        case "rectangular":
+            return RectangularBearing
+        case _:
+            raise TypeError("no default bearing defined")
+
+
 def register_callbacks(app):
     """Register all callbacks for the application."""
-
-    def get_bearing(case):
-        """Return default bearing instance based on case."""
-        match case:
-            case "circular":
-                return CircularBearing
-            case "annular":
-                return AnnularBearing
-            case "infinite":
-                return InfiniteLinearBearing
-            case "rectangular":
-                return RectangularBearing
-            case _:
-                raise TypeError("no default bearing defined")
 
     # Add callback to handle parameter updates
     @app.callback(
