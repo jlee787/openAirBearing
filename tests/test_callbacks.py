@@ -1,5 +1,4 @@
 import pytest
-from dash.testing.application_runners import import_app
 from openairbearing.app.callbacks import get_bearing
 from openairbearing.bearings import (
     CircularBearing,
