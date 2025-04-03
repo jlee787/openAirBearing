@@ -75,7 +75,7 @@ def test_solve_bearing():
     ]:
         results = [solve_bearing(bearing, ANALYTIC), solve_bearing(bearing, NUMERIC)]
         e = 0.05
-        assert np.all(np.abs(results[0].p - results[1].p) / np.max(results[0].p) < e)
-        assert np.all(np.abs(results[0].w - results[1].w) / np.max(results[0].w) < e)
-        assert np.all(np.abs(results[0].k - results[1].k) / np.max(results[0].k) < e)
-        assert np.all(np.abs(results[0].qs - results[1].qs) / np.max(results[0].qs) < e)
+        assert np.allclose(results[0].p, results[1].p, rtol=e)
+        assert np.allclose(results[0].w, results[1].w, rtol=e)
+        assert np.allclose(results[0].k, results[1].k, rtol=e)
+        assert np.allclose(results[0].qs, results[1].qs, rtol=e)
