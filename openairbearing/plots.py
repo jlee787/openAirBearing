@@ -1,6 +1,7 @@
 import numpy as np
 import plotly.subplots as sp
 import plotly.graph_objects as go
+from scipy.interpolate import griddata
 
 # Plot styling
 PLOT_FONT = dict(
@@ -325,10 +326,32 @@ def plot_bearing_shape(bearing):
     # fig = go.Figure()
     fig = sp.make_subplots(rows=1, cols=2, subplot_titles=("XY Geometry", "XZ Profile"))
 
+    plot_xz_shape(b, fig)
+    plot_xy_shape(b, fig)
+
+    for i in range(1, 3):
+        fig.update_xaxes(AXIS_STYLE, row=1, col=i)
+        fig.update_yaxes(AXIS_STYLE, row=1, col=i)
+
+    fig.update_layout(
+        font=PLOT_FONT,
+        height=300,
+        showlegend=True,
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        margin=dict(l=20, r=20, t=20, b=20),
+        legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5),
+    )
+    return fig
+
+
+def plot_xy_shape(bearing, fig):
+    b = bearing
     # SHAPE XY
     match b.case:
         case "annular" | "circular":
 
+            # outer circle
             theta = np.linspace(0, 2 * np.pi, 100)
             xa = b.xa * np.cos(theta) * 1e3
             ya = b.xa * np.sin(theta) * 1e3
@@ -346,6 +369,7 @@ def plot_bearing_shape(bearing):
                 col=1,
             )
 
+            # inner hole
             if b.case == "annular":
                 xc = b.xc * np.cos(theta) * 1e3
                 yc = b.xc * np.sin(theta) * 1e3
@@ -363,7 +387,7 @@ def plot_bearing_shape(bearing):
                     col=1,
                 )
 
-            # symmetry line
+            # symmetry lines
             fig.add_trace(
                 go.Scatter(
                     x=[0, 0],
@@ -388,6 +412,7 @@ def plot_bearing_shape(bearing):
             )
 
         case "infinite":
+            # right edge
             fig.add_trace(
                 go.Scatter(
                     x=np.array([1, 1]) * b.xa * 1e3,
@@ -400,7 +425,7 @@ def plot_bearing_shape(bearing):
                 row=1,
                 col=1,
             )
-
+            # left edge
             fig.add_trace(
                 go.Scatter(
                     x=np.array([0, 0]),
@@ -460,13 +485,62 @@ def plot_bearing_shape(bearing):
         row=1,
         col=1,
     )
+    return fig
 
-    if b.case == "rectangular":
+
+def plot_xz_shape(bearing, fig):
+    b = bearing
+
+    if b.ny > 1:
+        if b.case == "circular":
+            zr = (b.geom.T).flatten()
+            xr = (b.x[None, :] * np.cos(b.y)[:, None]).flatten()
+            yr = (b.x[None, :] * np.sin(b.y)[:, None]).flatten()
+
+            print(xr.shape, yr.shape, zr.shape)
+            # Define a regular grid over the data
+            x = np.linspace(-b.xa, b.xa, 99)
+            y = x
+            xg, yg = np.meshgrid(x, y)
+            # evaluate the z-values at the regular grid through cubic interpolation
+            z = griddata((xr, yr), zr, (xg, yg), method="cubic")
+            fig.update_xaxes(
+                title_text="x (mm)",
+                range=np.array([-1.1, 1.1]) * b.xa * 1e3,
+                scaleanchor="y",
+                row=1,
+                col=2,
+            )
+
+            fig.update_yaxes(
+                title_text="y (mm)",
+                range=np.array([-1.1, 1.1]) * b.xa * 1e3,
+                row=1,
+                col=2,
+            )
+
+        elif b.case == "rectangular":
+            z = b.geom.T
+            x = b.x
+            y = b.y
+            fig.update_xaxes(
+                title_text="x (mm)",
+                range=np.array([-0.6, 0.6]) * b.xa * 1e3,
+                row=1,
+                col=2,
+            )
+            fig.update_yaxes(
+                title_text="y (mm)",
+                range=np.array([-0.6, 0.6]) * b.ya * 1e3,
+                row=1,
+                col=2,
+            )
+
         fig.add_trace(
             go.Contour(
-                z=b.geom.T * 1e6,
-                x=b.x * 1e3,
-                y=b.y * 1e3,
+                z=z * 1e6,
+                x=x * 1e3,
+                y=y * 1e3,
                 colorscale="Viridis",
                 zmin=0,
                 zmax=b.error * 1e6,
@@ -481,13 +555,7 @@ def plot_bearing_shape(bearing):
             row=1,
             col=2,
         )
-        fig.update_xaxes(
-            title_text="x (mm)", range=np.array([-0.6, 0.6]) * b.xa * 1e3, row=1, col=2
-        )
 
-        fig.update_yaxes(
-            title_text="y (mm)", range=np.array([-0.6, 0.6]) * b.ya * 1e3, row=1, col=2
-        )
     else:
         # PROFILE XZ
         match b.case:
@@ -590,18 +658,4 @@ def plot_bearing_shape(bearing):
             row=1,
             col=2,
         )
-
-    for i in range(1, 3):
-        fig.update_xaxes(AXIS_STYLE, row=1, col=i)
-        fig.update_yaxes(AXIS_STYLE, row=1, col=i)
-
-    fig.update_layout(
-        font=PLOT_FONT,
-        height=300,
-        showlegend=True,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=20, r=20, t=20, b=20),
-        legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5),
-    )
     return fig

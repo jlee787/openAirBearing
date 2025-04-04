@@ -15,6 +15,16 @@ class Result:
     qc: np.ndarray
 
 
+# def get_y(bearing):
+#     b = bearing
+#     if b.ny == 1:
+#         return 1
+#     elif b.case =="rectangular":
+#         return np.linspace(-b.ya / 2, b.ya / 2, b.ny)
+#     elif b.case == "circular" or "annular":
+#         return np.linspace(0, b.ya, b.ny)
+
+
 def get_area(bearing):
     b = bearing
     match b.case:
@@ -54,14 +64,22 @@ def get_geom(bearing):
             x = b.x[:, None]
             y = b.y[None, :]
             zeros = np.zeros((b.nx, b.ny))
-            
+
             match b.error_type:
                 case "none":
                     geom = zeros
                 case "linear":
-                    geom = b.error * 2 * np.maximum(np.abs(x) / b.xa + zeros, np.abs(y) / b.ya + zeros)
+                    geom = (
+                        b.error
+                        * 2
+                        * np.maximum(np.abs(x) / b.xa + zeros, np.abs(y) / b.ya + zeros)
+                    )
                 case "quadratic":
-                    geom = b.error * 4 * np.maximum((x / b.xa) ** 2  + zeros, (y / b.ya) ** 2 + zeros)
+                    geom = (
+                        b.error
+                        * 4
+                        * np.maximum((x / b.xa) ** 2 + zeros, (y / b.ya) ** 2 + zeros)
+                    )
                 case _:
                     raise ValueError(f"Unknown error type: {b.error_type}")
 

@@ -251,10 +251,10 @@ def get_pressure_2d_numeric(bearing):
     for i, ha in enumerate(b.ha):
         h = ha + b.geom
         if b.csys == "polar":
-            epsilon_r = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
-            epsilon_theta = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
+            epsilon_r = (1 + b.Psi) * b.x[:, None] * h**3 / (24 * b.mu)
+            epsilon_theta = (1 + b.Psi) * b.x[:, None] * h**3 / (24 * b.mu)
             epsilon = (epsilon_r, epsilon_theta)
-            coefficient = sp.diags(1 / b.x, 0)
+            coefficient = sp.diags(1 / np.repeat(b.x, b.ny), 0)
         elif b.csys == "cartesian":
             epsilon = (1 + b.Psi) * h**3 / (24 * b.mu)
             coefficient = 1
@@ -339,14 +339,14 @@ def build_2d_diff_matrix(
         sp.csr_matrix: Sparse matrix representing the 2D differential operator.
     """
 
-    if isinstance(epsilon, tuple): 
+    if isinstance(epsilon, tuple):
         epsilon_x, epsilon_y = epsilon
         eps_x = (epsilon_x[:-1, :] + epsilon_y[1:, :]) / 2
         eps_y = (epsilon_y[:, :-1] + epsilon_y[:, 1:]) / 2
     else:  # Assume epsilon is a 2D array
         eps_x = (epsilon[:-1, :] + epsilon[1:, :]) / 2
         eps_y = (epsilon[:, :-1] + epsilon[:, 1:]) / 2
-    
+
     # pad stencil epsilon to match the size of the matrix
     eps_w = np.vstack([eps_x, np.zeros((1, M))])
     eps_e = np.vstack([np.zeros((1, M)), eps_x])
