@@ -5,7 +5,6 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 from scipy.special import i0, k0
 
-from openairbearing.config import ANALYTIC, NUMERIC
 from openairbearing.utils import (
     Result,
     get_load_capacity,
@@ -15,31 +14,37 @@ from openairbearing.utils import (
 
 
 def solve_bearing(bearing, soltype: bool) -> Result:
-    if soltype == ANALYTIC:
-        name = "Analytic"
-        match bearing.case:
-            case "circular":
-                p = get_pressure_analytic_circular(bearing)
-            case "annular":
-                p = get_pressure_analytic_annular(bearing)
-            case "infinite":
-                p = get_pressure_analytic_infinite(bearing)
-            case _:
-                return Result(
-                    name="none",
-                    p=np.array([]),
-                    w=np.array([]),
-                    k=np.array([]),
-                    qs=np.array([]),
-                    qa=np.array([]),
-                    qc=np.array([]),
-                )
-    elif soltype == NUMERIC:
-        name = "Numeric"
-        if bearing.case == "rectangular":
-            p = get_pressure_2d_numeric(bearing)
-        else:
+    match soltype:
+        case "analytic":
+            name = "analytic"
+            match bearing.case:
+                case "circular":
+                    p = get_pressure_analytic_circular(bearing)
+                case "annular":
+                    p = get_pressure_analytic_annular(bearing)
+                case "infinite":
+                    p = get_pressure_analytic_infinite(bearing)
+                case _:
+                    return Result(
+                        name="none",
+                        p=np.array([]),
+                        w=np.array([]),
+                        k=np.array([]),
+                        qs=np.array([]),
+                        qa=np.array([]),
+                        qc=np.array([]),
+                    )
+        case "numeric":
+            name = "numeric"
+            # if bearing.case == "rectangular":
+            #     p = get_pressure_2d_numeric(bearing)
+            # else:
             p = get_pressure_numeric(bearing)
+        case "numeric2d":
+            name = "numeric2d"
+            p = get_pressure_2d_numeric(bearing)
+        case _:
+            raise ValueError("Invalid solution type")
 
     w = get_load_capacity(bearing=bearing, p=p)
     k = get_stiffness(bearing=bearing, w=w)
@@ -246,7 +251,9 @@ def get_pressure_2d_numeric(bearing):
     for i, ha in enumerate(b.ha):
         h = ha + b.geom
         if b.csys == "polar":
-            # epsilon = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
+            epsilon_r = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
+            epsilon_theta = (1 + b.Psi) * b.x[None, :] * h ** 3 / (24 * b.mu)
+            epsilon = (epsilon_r, epsilon_theta)
             coefficient = sp.diags(1 / b.x, 0)
         elif b.csys == "cartesian":
             epsilon = (1 + b.Psi) * h**3 / (24 * b.mu)
@@ -278,7 +285,7 @@ def get_pressure_2d_numeric(bearing):
         # Build the 2D differential matrix
         A = build_2d_diff_matrix(
             coef=coefficient,
-            eps=epsilon,
+            epsilon=epsilon,
             porous_source=porous_source,
             dx=b.dx,
             dy=b.dy,
@@ -309,7 +316,7 @@ def get_pressure_2d_numeric(bearing):
 
 def build_2d_diff_matrix(
     coef: np.ndarray,
-    eps: float,
+    epsilon: float | tuple | np.ndarray,
     porous_source: np.ndarray,
     dx: float,
     dy: float,
@@ -331,10 +338,15 @@ def build_2d_diff_matrix(
     Returns:
         sp.csr_matrix: Sparse matrix representing the 2D differential operator.
     """
-    # Compute epsilon at half-points
-    eps_x = (eps[:-1, :] + eps[1:, :]) / 2
-    eps_y = (eps[:, :-1] + eps[:, 1:]) / 2
 
+    if isinstance(epsilon, tuple): 
+        epsilon_x, epsilon_y = epsilon
+        eps_x = (epsilon_x[:-1, :] + epsilon_y[1:, :]) / 2
+        eps_y = (epsilon_y[:, :-1] + epsilon_y[:, 1:]) / 2
+    else:  # Assume epsilon is a 2D array
+        eps_x = (epsilon[:-1, :] + epsilon[1:, :]) / 2
+        eps_y = (epsilon[:, :-1] + epsilon[:, 1:]) / 2
+    
     # pad stencil epsilon to match the size of the matrix
     eps_w = np.vstack([eps_x, np.zeros((1, M))])
     eps_e = np.vstack([np.zeros((1, M)), eps_x])

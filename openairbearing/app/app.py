@@ -4,14 +4,13 @@ from openairbearing.app.layouts import create_layout
 from openairbearing.app.callbacks import register_callbacks
 from openairbearing.bearings import CircularBearing
 from openairbearing.solvers import solve_bearing
-from openairbearing.config import ANALYTIC
 
 # Define input fields with default values
 default_bearing = CircularBearing()
 
 # Initialize bearing and calculate performance
 bearing = default_bearing
-result = solve_bearing(bearing, soltype=ANALYTIC)
+result = solve_bearing(bearing, "analytic")
 
 app = dash.Dash(
     __name__,

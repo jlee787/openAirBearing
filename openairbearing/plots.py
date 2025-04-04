@@ -10,8 +10,8 @@ PLOT_FONT = dict(
 
 # Define solver colors at the top level with other constants
 SOLVER_COLORS = {
-    "Analytic": "blue",
-    "Numeric": "red",
+    "analytic": "blue",
+    "numeric": "red",
 }
 
 # Common axis properties

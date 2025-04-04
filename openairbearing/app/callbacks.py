@@ -10,7 +10,6 @@ from openairbearing.bearings import (
 )
 from openairbearing.solvers import solve_bearing
 from openairbearing.utils import get_kappa, get_Qsc, get_beta
-from openairbearing.config import ANALYTIC, NUMERIC
 
 
 def get_bearing(case):
@@ -153,9 +152,9 @@ def register_callbacks(app):
             results = []
 
             if "analytic" in solvers and b.case != "rectangular":
-                results.append(solve_bearing(b, soltype=ANALYTIC))
+                results.append(solve_bearing(b, soltype="analytic"))
             if "numeric" in solvers:
-                results.append(solve_bearing(b, soltype=NUMERIC))
+                results.append(solve_bearing(b, soltype="numeric"))
 
             return (
                 plot_key_results(b, results),

@@ -1,8 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
 
-from openairbearing.config import ANALYTIC, NUMERIC
-
 
 @dataclass
 class Result:
@@ -55,14 +53,15 @@ def get_geom(bearing):
 
             x = b.x[:, None]
             y = b.y[None, :]
-
+            zeros = np.zeros((b.nx, b.ny))
+            
             match b.error_type:
                 case "none":
-                    geom = np.zeros((b.nx, b.ny))
+                    geom = zeros
                 case "linear":
-                    geom = b.error * (np.abs(x) / b.xa + np.abs(y) / b.ya)
+                    geom = b.error * 2 * np.maximum(np.abs(x) / b.xa + zeros, np.abs(y) / b.ya + zeros)
                 case "quadratic":
-                    geom = b.error * 2 * ((x / b.xa) ** 2 + (y / b.ya) ** 2)
+                    geom = b.error * 4 * np.maximum((x / b.xa) ** 2  + zeros, (y / b.ya) ** 2 + zeros)
                 case _:
                     raise ValueError(f"Unknown error type: {b.error_type}")
 
@@ -74,9 +73,9 @@ def get_geom(bearing):
                 case "none":
                     geom = np.zeros((b.nx, b.ny))
                 case "linear":
-                    geom = b.error * (1 - r / b.xa)
+                    geom = b.error * (1 - r / b.xa) + np.zeros_like(theta)
                 case "quadratic":
-                    geom = b.error * (1 - (r / b.xa) ** 2)
+                    geom = b.error * (1 - (r / b.xa) ** 2) + np.zeros_like(theta)
                 case _:
                     raise ValueError(f"Unknown error type: {b.error_type}")
 
@@ -205,7 +204,7 @@ def get_stiffness(bearing, w):
     return k
 
 
-def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
+def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
     """Calculate volumetric flow rates through the bearing.
 
     Args:
@@ -220,13 +219,15 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
             - qc (np.ndarray): Chamber flow rate (L/min)
     """
     b = bearing
-    if b.ny == 1:
-        if soltype == ANALYTIC:
-            h = b.ha
-            # print("a: ", p[[0, 1],-1]*1e-6)
-        elif soltype == NUMERIC:
-            h = b.ha + b.geom[:, None]
-            # print("n: ", p[[0, 1],-1]*1e-6)
+    if soltype == "analytic" or soltype == "numeric":
+        # 1D case
+        match soltype:
+            case "analytic":
+                h = b.ha
+                # print("a: ", p[[0, 1],-1]*1e-6)
+            case "numeric":
+                h = b.ha + b.geom[:, None]
+                # print("n: ", p[[0, 1],-1]*1e-6)
 
         if b.csys == "polar":
             q = (
@@ -252,32 +253,30 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: bool) -> tuple:
         qa = q[-1, :]
         qc = q[1, :]
         qs = qa - qc
-    else:
-        if soltype == ANALYTIC:
-            raise TypeError("Analytic 2d attempted")
-        if soltype == NUMERIC:
-            h = b.ha[None, None, :] + b.geom.T[:, :, None]
 
-            qx = (
-                -6e4
-                * h**3
-                * b.rho
-                * np.gradient(p**2, axis=1)
-                * b.dy[:, None, None]
-                / (12 * b.mu * b.pa * b.dx[None, :, None])
-            )
-            qy = (
-                -6e4
-                * h**3
-                * b.rho
-                * np.gradient(p**2, axis=0)
-                * b.dx[None, :, None]
-                / (12 * b.mu * b.pa * b.dy[:, None, None])
-            )
+    elif soltype == "numeric2d":
+        # 2D case
+        h = b.ha[None, None, :] + b.geom.T[:, :, None]
+        qx = (
+            -6e4
+            * h**3
+            * b.rho
+            * np.gradient(p**2, axis=1)
+            * b.dy[:, None, None]
+            / (12 * b.mu * b.pa * b.dx[None, :, None])
+        )
+        qy = (
+            -6e4
+            * h**3
+            * b.rho
+            * np.gradient(p**2, axis=0)
+            * b.dx[None, :, None]
+            / (12 * b.mu * b.pa * b.dy[:, None, None])
+        )
 
-            qa = np.sum(np.abs(qx[:, (0, -1), :]), axis=(0, 1)) + np.sum(
-                abs(qy[(0, -1), :, :]), axis=(0, 1)
-            )
-            qc = 0
-            qs = qa - qc
+        qa = np.sum(np.abs(qx[:, (0, -1), :]), axis=(0, 1)) + np.sum(
+            abs(qy[(0, -1), :, :]), axis=(0, 1)
+        )
+        qc = 0
+        qs = qa - qc
     return qs, qa, qc
