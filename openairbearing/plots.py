@@ -13,6 +13,7 @@ PLOT_FONT = dict(
 SOLVER_COLORS = {
     "analytic": "blue",
     "numeric": "red",
+    "numeric2d": "red",
 }
 
 # Common axis properties
@@ -116,11 +117,10 @@ def plot_key_results(bearing, results):
             col=2,
         )
 
-        if b.ny == 1:
-            n_plots = 4
-            h_plots = np.linspace(b.ha_min**0.5, b.ha_max**0.5, n_plots) ** 2
-            t_locations = np.round(np.linspace(b.nx, 0, n_plots + 2)[1:-1]).astype(int)
-
+        n_plots = 4
+        h_plots = np.linspace(b.ha_min**0.5, b.ha_max**0.5, n_plots) ** 2
+        t_locations = np.round(np.linspace(b.nx, 0, n_plots + 2)[1:-1]).astype(int)
+        if b.ny == 1 or result.name == "analytic":
             for h_plot, t_loc in zip(h_plots, t_locations):
                 in_h = np.abs(b.ha - h_plot).argmin()
                 pressures = (result.p[:, in_h] - b.pa) * 1e-6  # Convert to MPa
@@ -145,8 +145,28 @@ def plot_key_results(bearing, results):
             fig.update_xaxes(title_text="r (mm)", range=[0, max_radius], row=1, col=3)
             fig.update_yaxes(title_text="p (MPa)", range=[0, None], row=1, col=3)
         else:
+            # for h_plot, t_loc in zip(h_plots, t_locations):
+            #     in_h = np.abs(b.ha - h_plot).argmin()
+            #     pressures = (result.p[3, :, in_h] - b.pa) * 1e-6  # Convert to MPa
+            #     fig.add_trace(
+            #         go.Scatter(
+            #             x=b.x * 1e3,
+            #             y=pressures,
+            #             mode="lines+text",
+            #             textposition="top center",
+            #             text=[
+            #                 f"{h_plot*1e6:.2f} μm" if i == t_loc else None
+            #                 for i in range(b.nx)
+            #             ],
+            #             textfont=dict(color=color),
+            #             name=f"{result.name} {h_plot*1e6:.1f} μm",
+            #             line=dict(color=color),
+            #             showlegend=False,
+            #         ),
+            #         row=1,
+            #         col=3,
+            #     )
             pressures = (result.p - b.pa) * 1e-6  # Convert to MPa
-
             fig.add_trace(
                 go.Contour(
                     z=pressures[:, :, k_max_idx],
@@ -236,45 +256,49 @@ def plot_key_results(bearing, results):
             row=2,
             col=1,
         )
-
         if b.type == "seal":
-            # Chamber Flow rate plot
-            fig.add_trace(
-                go.Scatter(
-                    x=b.ha.flatten() * 1e6,
-                    y=result.qc,
-                    name=result.name,
-                    mode="lines+markers",
-                    marker=dict(
-                        color=color,
-                        size=[8 if i == k_max_idx else 0 for i in range(b.nx)],
-                        symbol="circle",
+            try:
+                # Chamber Flow rate plot
+                fig.add_trace(
+                    go.Scatter(
+                        x=b.ha.flatten() * 1e6,
+                        y=result.qc,
+                        name=result.name,
+                        mode="lines+markers",
+                        marker=dict(
+                            color=color,
+                            size=[8 if i == k_max_idx else 0 for i in range(b.nx)],
+                            symbol="circle",
+                        ),
+                        line=dict(color=color),
+                        showlegend=False,
                     ),
-                    line=dict(color=color),
-                    showlegend=False,
-                ),
-                row=2,
-                col=2,
-            )
+                    row=2,
+                    col=2,
+                )
 
-            # Ambient Flow rate plot
-            fig.add_trace(
-                go.Scatter(
-                    x=b.ha.flatten() * 1e6,
-                    y=result.qa,
-                    name=result.name,
-                    mode="lines+markers",
-                    marker=dict(
-                        color=color,
-                        size=[8 if i == k_max_idx else 0 for i in range(b.nx)],
-                        symbol="circle",
+                # Ambient Flow rate plot
+                fig.add_trace(
+                    go.Scatter(
+                        x=b.ha.flatten() * 1e6,
+                        y=result.qa,
+                        name=result.name,
+                        mode="lines+markers",
+                        marker=dict(
+                            color=color,
+                            size=[8 if i == k_max_idx else 0 for i in range(b.nx)],
+                            symbol="circle",
+                        ),
+                        line=dict(color=color),
+                        showlegend=False,
                     ),
-                    line=dict(color=color),
-                    showlegend=False,
-                ),
-                row=2,
-                col=3,
-            )
+                    row=2,
+                    col=3,
+                )
+            except:
+                print(
+                    "Warning: Chamber and Ambient Flow rates not available for this bearing type."
+                )
         else:
             fig.layout.annotations[4].text = (
                 ""  # remove subplot titles for missing plots
@@ -304,7 +328,7 @@ def plot_key_results(bearing, results):
     # Update layout
     fig.update_layout(
         font=PLOT_FONT,
-        height=600,
+        height=800,
         # showlegend=True,
         plot_bgcolor="white",
         paper_bgcolor="white",
@@ -467,6 +491,8 @@ def plot_xy_shape(bearing, fig):
             )
             fig.update_xaxes(
                 range=np.array([-0.6, 0.6]) * b.xa * 1e3,
+                scaleanchor="y",
+                scaleratio=1,
             )
 
         case _:
@@ -492,7 +518,7 @@ def plot_xz_shape(bearing, fig):
     b = bearing
 
     if b.ny > 1:
-        if b.case == "circular":
+        if b.case == "circular" or b.case == "annular":
             zr = (b.geom.T).flatten()
             xr = (b.x[None, :] * np.cos(b.y)[:, None]).flatten()
             yr = (b.x[None, :] * np.sin(b.y)[:, None]).flatten()
@@ -504,6 +530,9 @@ def plot_xz_shape(bearing, fig):
             xg, yg = np.meshgrid(x, y)
             # evaluate the z-values at the regular grid through cubic interpolation
             z = griddata((xr, yr), zr, (xg, yg), method="cubic")
+            if b.case == "annular":
+                dist = np.sqrt(xg**2 + yg**2)
+                z[dist < b.xc] = np.nan
             fig.update_xaxes(
                 title_text="x (mm)",
                 range=np.array([-1.1, 1.1]) * b.xa * 1e3,
@@ -535,6 +564,22 @@ def plot_xz_shape(bearing, fig):
                 row=1,
                 col=2,
             )
+        elif b.case == "journal":
+            z = b.geom.T
+            x = b.x / b.xa
+            y = b.y
+            fig.update_xaxes(
+                title_text="theta (rad)",
+                range=np.array([-1.1, 1.1]) * np.pi,
+                row=1,
+                col=2,
+            )
+            fig.update_yaxes(
+                title_text="y (mm)",
+                range=np.array([-0.6, 0.6]) * b.ya * 1e3,
+                row=1,
+                col=2,
+            )
 
         fig.add_trace(
             go.Contour(
@@ -550,7 +595,7 @@ def plot_xz_shape(bearing, fig):
                     labelfont=dict(size=10, color="white"),
                 ),
                 colorbar=dict(title="(μm)", thickness=15),
-                name="Air gap pressure",
+                name="Profile",
             ),
             row=1,
             col=2,

@@ -36,6 +36,8 @@ def get_area(bearing):
             A = b.xa
         case "rectangular":
             A = b.xa * b.ya
+        case "journal":
+            A = 2 * np.pi * b.xa * b.ya
         case _:
             raise ValueError(f"Unknown case: {b.case}")
 
@@ -64,7 +66,6 @@ def get_geom(bearing):
             x = b.x[:, None]
             y = b.y[None, :]
             zeros = np.zeros((b.nx, b.ny))
-
             match b.error_type:
                 case "none":
                     geom = zeros
@@ -80,6 +81,10 @@ def get_geom(bearing):
                         * 4
                         * np.maximum((x / b.xa) ** 2 + zeros, (y / b.ya) ** 2 + zeros)
                     )
+                case "tiltx":
+                    geom = b.error * b.x[:, None] / b.xa + zeros
+                case "tilty":
+                    geom = b.error * b.y / b.ya + zeros
                 case _:
                     raise ValueError(f"Unknown error type: {b.error_type}")
 
@@ -170,18 +175,11 @@ def get_dA(bearing) -> np.ndarray:
     else:
         match b.csys:
             case "polar":
-                dA = np.pi * np.gradient(b.x**2)[None, :] * b.dy[:, None]
-                dA[[0, -1], :] = dA[[0, -1], :] / 2
+                dx2 = b.x**2 - np.insert(b.x[:-1], 0, bearing.xc) ** 2
+                dy = b.y - np.insert(b.y[:-1], 0, 0)
+                dA = 0.5 * dx2[None, :] * dy[:, None]
             case "cartesian":
-                dA = (
-                    b.dx[
-                        None,
-                        :,
-                    ]
-                    * b.dy[:, None]
-                )
-                dA[[0, -1], :] = dA[[0, -1], :] / 2
-                dA[:, [0, -1]] = dA[:, [0, -1]] / 2
+                dA = b.dx * b.dy 
             case _:
                 raise ValueError("Error: invalid csys in dA calculation")
     return dA
@@ -198,12 +196,19 @@ def get_load_capacity(bearing, p: np.ndarray) -> np.ndarray:
         numpy.ndarray: The calculated load capacity.
     """
     b = bearing
-    dA = get_dA(b)
     p_rel = p - b.pa
-    if b.ny == 1:
+    if b.case == "journal":
+        w_x = p_rel * np.cos(b.theta)[None, :, None] * b.dx * b.dx
+        w = np.sum(w_x, axis=(0, 1))
+    elif p.ndim == 2:
+        ny = b.ny
+        b.ny = 1
+        dA = get_dA(b)
+        b.ny = ny
         w = np.sum(p_rel * dA[:, None], axis=0)
     else:
-        w = np.sum(p_rel * dA[:, :, None], axis=(0, 1))
+        dA = get_dA(b)
+        w = np.sum(p_rel * dA, axis=(0, 1))
     return w
 
 
@@ -218,7 +223,10 @@ def get_stiffness(bearing, w):
         numpy.ndarray: The stiffness values.
     """
     b = bearing
-    k = -np.gradient(w, b.ha.flatten())
+    if b.case == "journal":
+        k = np.gradient(w, b.e.flatten())
+    else:
+        k = -np.gradient(w, b.ha.flatten())
     return k
 
 
@@ -242,59 +250,99 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
         match soltype:
             case "analytic":
                 h = b.ha
-                # print("a: ", p[[0, 1],-1]*1e-6)
             case "numeric":
                 h = b.ha + b.geom[:, None]
-                # print("n: ", p[[0, 1],-1]*1e-6)
+            
 
-        if b.csys == "polar":
-            q = (
-                -6e4
-                * h**3
-                * b.rho
-                * np.gradient(p**2, axis=0)
-                * np.pi
-                * b.x[:, None]
-                / (12 * b.mu * b.pa * b.dx[:, None])
-            )
-        elif b.csys == "cartesian":
-            q = (
-                -6e4
-                * h**3
-                * b.rho
-                * np.gradient(p**2, axis=0)
-                / (12 * b.mu * b.pa * b.dx[:, None])
-            )
-        else:
-            raise ValueError("Invalid csys")
+        match b.csys:
+            case "polar":
+                q = (
+                    -6e4
+                    * h**3
+                    * b.rho
+                    * np.gradient(p**2, axis=0)
+                    * np.pi
+                    * b.x[:, None]
+                    / (12 * b.mu * b.pa * b.dx[:, None])
+                )
+            case "cartesian":
+                q = (
+                    -6e4
+                    * h**3
+                    * b.rho
+                    * np.gradient(p**2, axis=0)
+                    / (12 * b.mu * b.pa * b.dx[:, None])
+                )
+            case _:
+                raise ValueError("Invalid csys")
 
         qa = q[-1, :]
         qc = q[1, :]
         qs = qa - qc
 
     elif soltype == "numeric2d":
-        # 2D case
         h = b.ha[None, None, :] + b.geom.T[:, :, None]
-        qx = (
-            -6e4
-            * h**3
-            * b.rho
-            * np.gradient(p**2, axis=1)
-            * b.dy[:, None, None]
-            / (12 * b.mu * b.pa * b.dx[None, :, None])
-        )
-        qy = (
-            -6e4
-            * h**3
-            * b.rho
-            * np.gradient(p**2, axis=0)
-            * b.dx[None, :, None]
-            / (12 * b.mu * b.pa * b.dy[:, None, None])
-        )
+        match b.csys:
+            case "polar":
+                qx = (
+                    -6e4
+                    * h**3
+                    * b.rho
+                    * np.gradient(p**2, axis=1)
+                    / (2 * np.pi)
+                    * b.x[None, :, None]
+                    * b.dy[:, None, None]
+                    / (12 * b.mu * b.pa * b.dx[None, :, None])
+                )
+                qy = 0
+                qa = np.sum(qx[:, -1, :], axis=0)
+                qc = np.sum(qx[:, 0, :], axis=0)
+            case "cartesian":
+                if b.case == "rectangular":
+                    qx = (
+                        -6e4
+                        * h**3
+                        * b.rho
+                        * np.gradient(p**2, axis=1)
+                        * b.dy
+                        / (12 * b.mu * b.pa * b.dx)
+                    )
+                    qy = (
+                        -6e4
+                        * h**3
+                        * b.rho
+                        * np.gradient(p**2, axis=0)
+                        * b.dx
+                        / (12 * b.mu * b.pa * b.dy)
+                    )
 
-        qa = np.sum(np.abs(qx[:, (0, -1), :]), axis=(0, 1)) + np.sum(
-            abs(qy[(0, -1), :, :]), axis=(0, 1)
-        )
-        qc = 0
+                    qa = np.sum(np.abs(qx[:, (0, -1), :]), axis=(0, 1)) + np.sum(
+                        abs(qy[(0, -1), :, :]), axis=(0, 1)
+                    )
+                    qc = 0
+                elif b.case == "journal":
+                    h = np.transpose(b.clearance + b.geom[:, :, None], (1, 0, 2))
+                    qx = (
+                        -6e4
+                        * h**3
+                        * b.rho
+                        * np.gradient(p**2, axis=1)
+                        * b.dx
+                        / (12 * b.mu * b.pa * b.dx)
+                    )
+                    qy = (
+                        -6e4
+                        * h**3
+                        * b.rho
+                        * np.gradient(p**2, axis=0)
+                        * b.dx
+                        / (12 * b.mu * b.pa * b.dy)
+                    )
+
+                    qa = np.sum(qy[-1, :, :], axis=(0))
+                    qc = np.sum(qy[1, :, :], axis=(0))
+            case _:
+                qa, qc = 0, 0
+
         qs = qa - qc
     return qs, qa, qc

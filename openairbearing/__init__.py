@@ -15,6 +15,7 @@ from .bearings import (
     CircularBearing,
     AnnularBearing,
     InfiniteLinearBearing,
+    JournalBearing,
 )
 
 # Import utility functions from where they're defined
@@ -45,6 +46,7 @@ __all__ = [
     "CircularBearing",
     "AnnularBearing",
     "InfiniteLinearBearing",
+    "JournalBearing",
     # Bearing parameters
     "get_kappa",
     "get_Qsc",

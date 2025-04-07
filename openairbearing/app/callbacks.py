@@ -7,6 +7,7 @@ from openairbearing.bearings import (
     AnnularBearing,
     InfiniteLinearBearing,
     RectangularBearing,
+    JournalBearing,
 )
 from openairbearing.solvers import solve_bearing
 from openairbearing.utils import get_kappa, get_Qsc, get_beta
@@ -23,6 +24,8 @@ def get_bearing(case):
             return InfiniteLinearBearing
         case "rectangular":
             return RectangularBearing
+        case "journal":
+            return JournalBearing
         case _:
             raise TypeError("no default bearing defined")
 
@@ -151,10 +154,12 @@ def register_callbacks(app):
             # Calculate results for each selected solver
             results = []
 
-            if "analytic" in solvers and b.case != "rectangular":
+            if "analytic" in solvers:
                 results.append(solve_bearing(b, soltype="analytic"))
             if "numeric" in solvers:
                 results.append(solve_bearing(b, soltype="numeric"))
+            if "numeric2d" in solvers:
+                results.append(solve_bearing(b, soltype="numeric2d"))
 
             return (
                 plot_key_results(b, results),
@@ -204,6 +209,13 @@ def register_callbacks(app):
                     {**base_style, "display": "grid"},
                     {**base_style, "display": "grid"},
                 )
+            case "journal":
+                return (
+                    {**base_style, "display": "grid"},
+                    {**base_style, "display": "none"},
+                    {**base_style, "display": "grid"},
+                    {**base_style, "display": "grid"},
+                )
             case _:
                 return (
                     {**base_style, "display": "none"},
@@ -211,6 +223,114 @@ def register_callbacks(app):
                     {**base_style, "display": "none"},
                     {**base_style, "display": "none"},
                 )
+
+    @app.callback(
+        [Output("solver-select", "options"), Output("solver-select", "value")],
+        Input("case-select", "value"),
+    )
+    def update_solver_options(case):
+        """Update available solvers based on the selected case."""
+
+        case_solvers = {
+            "circular": [
+                {
+                    "label": "Analytic",
+                    "value": "analytic",
+                    "disabled": False,
+                },
+                {
+                    "label": "Numeric",
+                    "value": "numeric",
+                    "disabled": False,
+                },
+                {
+                    "label": "Numeric 2d",
+                    "value": "numeric2d",
+                    "disabled": True,
+                },
+            ],
+            "annular": [
+                {
+                    "label": "Analytic",
+                    "value": "analytic",
+                    "disabled": False,
+                },
+                {
+                    "label": "Numeric",
+                    "value": "numeric",
+                    "disabled": False,
+                },
+                {
+                    "label": "Numeric 2d",
+                    "value": "numeric2d",
+                    "disabled": True,
+                },
+            ],
+            "infinite": [
+                {
+                    "label": "Analytic",
+                    "value": "analytic",
+                    "disabled": False,
+                },
+                {
+                    "label": "Numeric",
+                    "value": "numeric",
+                    "disabled": False,
+                },
+                {
+                    "label": "Numeric 2d",
+                    "value": "numeric2d",
+                    "disabled": True,
+                },
+            ],
+            "rectangular": [
+                {
+                    "label": "Analytic",
+                    "value": "analytic",
+                    "disabled": True,
+                },
+                {
+                    "label": "Numeric",
+                    "value": "numeric",
+                    "disabled": True,
+                },
+                {
+                    "label": "Numeric 2d",
+                    "value": "numeric2d",
+                    "disabled": False,
+                },
+            ],
+            "journal": [
+                {
+                    "label": "Analytic",
+                    "value": "analytic",
+                    "disabled": True,
+                },
+                {
+                    "label": "Numeric",
+                    "value": "numeric",
+                    "disabled": True,
+                },
+                {
+                    "label": "Numeric 2d",
+                    "value": "numeric2d",
+                    "disabled": False,
+                },
+            ],
+        }
+        # Default solver selections for each case
+        case_defaults = {
+            "circular": ["analytic"],
+            "annular": ["analytic"],
+            "infinite": ["analytic"],
+            "rectangular": ["numeric2d"],
+            "journal": ["numeric2d"],
+        }
+        # Get the solvers for the selected case
+        solvers = case_solvers.get(case, [])
+        defaults = case_defaults.get(case, [])
+
+        return solvers, defaults
 
     @app.callback(
         [

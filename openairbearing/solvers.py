@@ -36,9 +36,6 @@ def solve_bearing(bearing, soltype: bool) -> Result:
                     )
         case "numeric":
             name = "numeric"
-            # if bearing.case == "rectangular":
-            #     p = get_pressure_2d_numeric(bearing)
-            # else:
             p = get_pressure_numeric(bearing)
         case "numeric2d":
             name = "numeric2d"
@@ -170,16 +167,16 @@ def get_pressure_numeric(bearing):
 
         # Boundary conditions
         if b.type == "bearing":
-            # symmetry at r=0
+            # Neumann at r=0
             A[0, 1] = -A[0, 0]
             f[0] = 0
         elif b.type == "seal":
-            # symmetry at r=rc
+            # Dirilecht at r=rc
             A[0, 0] = 1
             A[0, 1] = 0
             f[0] = b.pc**2
 
-        # dirilect at r=ra
+        # Dirichlet at r=ra
         A[-1, -2] = 0
         A[-1, -1] = 1
         f[-1] = b.pa**2
@@ -248,16 +245,18 @@ def get_pressure_2d_numeric(bearing):
     # Porous feeding terms
     porous_source = -kappa / (2 * b.hp * b.mu)
 
-    for i, ha in enumerate(b.ha):
-        h = ha + b.geom
+    for i in range(b.nh):
+        if b.case == "journal":
+            h = (b.clearance + b.geom[:, :, None])[:, :, i]
+        else:
+            h = b.ha[i] + b.geom
+
         if b.csys == "polar":
-            epsilon_r = (1 + b.Psi) * b.x[:, None] * h**3 / (24 * b.mu)
-            epsilon_theta = (1 + b.Psi) * b.x[:, None] * h**3 / (24 * b.mu)
+            epsilon_r = b.x[:, None] * (1 + b.Psi) * h**3 / (24 * b.mu)
+            epsilon_theta = (1 + b.Psi) * h**3 / (24 * b.mu)
             epsilon = (epsilon_r, epsilon_theta)
-            coefficient = sp.diags(1 / np.repeat(b.x, b.ny), 0)
         elif b.csys == "cartesian":
             epsilon = (1 + b.Psi) * h**3 / (24 * b.mu)
-            coefficient = 1
 
         # boundary conditions
         if b.case == "rectangular":
@@ -267,12 +266,24 @@ def get_pressure_2d_numeric(bearing):
                 "north": "Dirichlet",
                 "south": "Dirichlet",
             }
+            bc_vals = {
+                "west": b.pa,
+                "east": b.pa,
+                "north": b.pa,
+                "south": b.pa,
+            }
         elif b.case == "circular":
             bc = {
                 "west": "Neumann",
                 "east": "Dirichlet",
                 "north": "Periodic",
                 "south": "Periodic",
+            }
+            bc_vals = {
+                "west": b.pa,
+                "east": b.pa,
+                "north": b.pa,
+                "south": b.pa,
             }
         elif b.case == "annular":
             bc = {
@@ -281,125 +292,190 @@ def get_pressure_2d_numeric(bearing):
                 "north": "Periodic",
                 "south": "Periodic",
             }
+            bc_vals = {
+                "west": b.pa,
+                "east": b.pc,
+            }
+        elif b.case == "journal":
+            bc = {
+                "west": "Dirichlet",
+                "east": "Dirichlet",
+                "north": "Periodic",
+                "south": "Periodic",
+            }
+            bc_vals = {
+                "west": b.pa,
+                "east": b.pc,
+            }
 
-        # Build the 2D differential matrix
-        A = build_2d_diff_matrix(
-            coef=coefficient,
+        p[:, :, i] = fdm_2d(
             epsilon=epsilon,
             porous_source=porous_source,
+            ps=b.ps,
             dx=b.dx,
             dy=b.dy,
             bc=bc,
+            bc_vals=bc_vals,
             N=N,
             M=M,
         )
-
-        # Right-hand side (forcing term)
-        f = (b.ps**2 * porous_source).flatten()
-
-        if bc["west"] == "Dirichlet":
-            f[0::N] = b.pa**2
-        if bc["east"] == "Dirichlet":
-            f[N - 1 :: N] = b.pa**2
-        if bc["north"] == "Dirichlet":
-            f[-N:] = b.pa**2
-        if bc["south"] == "Dirichlet":
-            f[:N] = b.pa**2
-
-        # Solve the linear system
-        A = A.tocsr()
-        p_flat = spla.spsolve(A, f)
-        p[:, :, i] = p_flat.reshape((M, N)) ** 0.5
-
     return p
 
 
-def build_2d_diff_matrix(
-    coef: np.ndarray,
-    epsilon: float | tuple | np.ndarray,
+def fdm_2d(
+    epsilon: np.ndarray,
     porous_source: np.ndarray,
-    dx: float,
-    dy: float,
+    ps: float,
+    dx: np.ndarray,
+    dy: np.ndarray,
     bc: dict,
+    bc_vals: dict,
     N: int,
     M: int,
-) -> sp.csr_matrix:
+) -> np.ndarray:
     """
-    Construct a finite-difference matrix for 2D differential operator:
-    coef @ D_r(epsilon * D_r(f(r))) + coef @ D_x(epsilon * D_x(f(x)))
+    Solve air gap pressure in 2D using a finite difference scheme.
 
     Args:
-        coef (np.ndarray): Coefficient matrix.
-        eps (np.ndarray): Epsilon matrix (variable coefficients) (N,M).
-        dr (np.ndarray): Radial grid spacing.
-        dx (np.ndarray): angular grid spacing.
-        bc (dict): Dictionary specifying boundary conditions for "left", "right", "top", and "bottom".
+        epsilon (np.ndarray): Coefficient matrix (N, M).
+        porous_source (float): Source term through porous restrictor.
+        ps (float): Supply pressure
+        dx (float): Grid spacing in the x-direction.
+        dy (float): Grid spacing in the y-direction.
+        bc (dict): Boundary conditions for "west", "east", "north", "south".
+                   Each can be "Dirichlet", "Neumann", or "Periodic".
+        dirichlet_values (dict): Dirichlet values for "west", "east", "north", "south".
+        N (int): Number of grid points in the x-direction.
+        M (int): Number of grid points in the y-direction.
 
     Returns:
-        sp.csr_matrix: Sparse matrix representing the 2D differential operator.
+        np.ndarray: Solution pressure matrix p (N, M).
     """
+    # Number of unknowns
+    num_points = N * M
 
-    if isinstance(epsilon, tuple):
-        epsilon_x, epsilon_y = epsilon
-        eps_x = (epsilon_x[:-1, :] + epsilon_y[1:, :]) / 2
-        eps_y = (epsilon_y[:, :-1] + epsilon_y[:, 1:]) / 2
-    else:  # Assume epsilon is a 2D array
-        eps_x = (epsilon[:-1, :] + epsilon[1:, :]) / 2
-        eps_y = (epsilon[:, :-1] + epsilon[:, 1:]) / 2
+    # Create sparse matrix and right-hand side
+    A = sp.lil_matrix((num_points, num_points))
 
-    # pad stencil epsilon to match the size of the matrix
-    eps_w = np.vstack([eps_x, np.zeros((1, M))])
-    eps_e = np.vstack([np.zeros((1, M)), eps_x])
-    eps_s = np.hstack([eps_y, np.zeros((N, 1))])
-    eps_n = np.hstack([np.zeros((N, 1)), eps_y])
+    # edge source = 0 except for periodic boundaries
+    if bc["west"] != "Periodic":
+        porous_source[:, 0] = 0
+    if bc["east"] != "Periodic":
+        porous_source[:, -1] = 0
+    if bc["north"] != "Periodic":
+        porous_source[-1, :] = 0
+    if bc["south"] != "Periodic":
+        porous_source[0, :] = 0
 
-    # Form sparse matrix diagonals
-    diag_center = (
-        -((eps_w + eps_e) / dx[:, None] ** 2 + (eps_n + eps_s) / dy[None, :] ** 2)
-        + porous_source
-    ).flatten("F")
-    diag_west = (eps_w / dx[:, None] ** 2).flatten("F")[:-1]
-    diag_east = (eps_e / dx[:, None] ** 2).flatten("F")[1:]
-    diag_north = (eps_n / dy[None, :] ** 2).flatten("F")[:-N]
-    diag_south = (eps_s / dy[None, :] ** 2).flatten("F")[N:]
+    b = porous_source.flatten() * ps**2
 
-    # Boundary conditions
-    diag_east[N - 1 :: N] = 0
-    diag_west[N - 2 :: N] = 0
+    # Helper function to convert 2D indices to 1D
+    def idx(i, j):
+        return i * M + j
 
-    diag_east[:N] = 0
-    diag_east[-N:] = 0
+    # Compute epsilon at half-points
+    eps_w = np.zeros_like(epsilon)
+    eps_e = np.zeros_like(epsilon)
+    eps_n = np.zeros_like(epsilon)
+    eps_s = np.zeros_like(epsilon)
 
-    diag_west[:N] = 0
-    diag_west[-N:] = 0
+    # West/east half-points
+    eps_w[:, :-1] = (epsilon[:, :-1] + epsilon[:, 1:]) / 2
+    eps_e[:, 1:] = (epsilon[:, :-1] + epsilon[:, 1:]) / 2
+    # North/south half-points
+    eps_n[:-1, :] = (epsilon[:-1, :] + epsilon[1:, :]) / 2
+    eps_s[1:, :] = (epsilon[:-1, :] + epsilon[1:, :]) / 2
 
-    diag_south[::N] = 0
-    diag_south[N - 1 :: N] = 0
+    # Build the finite difference matrix
+    for i in range(N):
+        for j in range(M):
+            row = idx(i, j)
 
-    diag_north[::N] = 0
-    diag_north[N - 1 :: N] = 0
+            # Coefficients for the 5-point stencil
+            center = (
+                -(eps_w[i, j] + eps_e[i, j]) / dx**2
+                - (eps_n[i, j] + eps_s[i, j]) / dy**2
+                + porous_source[i, j]
+            )
+            west = eps_w[i, j] / dx**2
+            east = eps_e[i, j] / dx**2
+            north = eps_n[i, j] / dy**2
+            south = eps_s[i, j] / dy**2
 
-    if bc["west"] == "Dirichlet":
-        diag_center[0::N] = 1
-        diag_east[::N] = 0
-    if bc["east"] == "Dirichlet":
-        diag_center[N - 1 :: N] = 1
-        diag_west[N - 1 :: N] = 0
-    if bc["north"] == "Dirichlet":
-        diag_center[-N:] = 1
-        diag_south[-N:] = 0
-    if bc["south"] == "Dirichlet":
-        diag_center[:N] = 1
-        diag_north[:N] = 0
+            # center point
+            A[row, row] = center
 
-    L_mat = sp.diags(
-        [diag_center, diag_east, diag_west, diag_north, diag_south],
-        [0, 1, -1, N, -N],
-        format="csr",
-    )
+            # West neighbor
+            if j > 0:
+                A[row, idx(i, j - 1)] = west
+            else:
+                match bc["west"]:
+                    case "Periodic":
+                        A[row, idx(i, M - 1)] = west
+                    case "Neumann":
+                        A[row, row] += west
+                    case "Dirichlet":
+                        A[row, :] = 0
+                        A[row, row] = 1
+                        b[row] = bc_vals["west"] ** 2
+                    case _:
+                        raise ValueError("invalid BC")
 
-    # Handle scalar coefficients
-    if isinstance(coef, (float, int)):
-        return coef * L_mat
-    else:
-        return coef @ L_mat
+            # East neighbor
+            if j < M - 1:
+                A[row, idx(i, j + 1)] = east
+            else:
+                match bc["east"]:
+                    case "Periodic":
+                        A[row, idx(i, 0)] = east
+                    case "Neumann":
+                        A[row, row] += east
+                    case "Dirichlet":
+                        A[row, :] = 0
+                        A[row, row] = 1
+                        b[row] = bc_vals["east"] ** 2
+                    case _:
+                        raise ValueError("invalid BC")
+
+            # North neighbor
+            if i > 0:
+                A[row, idx(i - 1, j)] = north
+            else:
+                match bc["north"]:
+                    case "Periodic":
+                        A[row, idx(N - 1, j)] = north
+                    case "Neumann":
+                        A[row, row] += north
+                    case "Dirichlet":
+                        A[row, :] = 0
+                        A[row, row] = 1
+                        b[row] = bc_vals["north"] ** 2
+                    case _:
+                        raise ValueError("invalid BC")
+
+            # South neighbor
+            if i < N - 1:
+                A[row, idx(i + 1, j)] = south
+            else:
+                match bc["south"]:
+                    case "Periodic":
+                        A[row, idx(0, j)] = south
+                    case "Neumann":
+                        A[row, row] += south
+                    case "Dirichlet":
+                        A[row, :] = 0
+                        A[row, row] = 1
+                        b[row] = bc_vals["south"] ** 2
+                    case _:
+                        raise ValueError("invalid BC")
+            # Source term
+            # b[row] += porous_source[i, j] * ps**2
+
+    # Solve the linear system
+    A = A.tocsr()
+
+    p_flat = spla.spsolve(A, b) ** 0.5
+    p = p_flat.reshape((N, M)).T
+    return p
+
+

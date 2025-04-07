@@ -39,6 +39,12 @@ class BaseBearing:
     Qsc: float = 3  # L/min
     psc: float = 0.6e6 + pa
 
+    # clearance and eccentricity for journal bearings
+    c: float = field(init=False)
+    e: float = field(init=False)
+    theta: np.ndarray = field(init=False, default=None)
+    clearance: np.ndarray = field(init=False, default=None)
+
     x: np.ndarray = field(init=False)
     dx: np.ndarray = field(init=False)
     y: np.ndarray = field(init=False)
@@ -141,4 +147,57 @@ class RectangularBearing(BaseBearing):
         self.psc = 0.41e6 + self.pa
         self.x = np.linspace(-self.xa / 2, self.xa / 2, self.nx)
         self.y = np.linspace(-self.ya / 2, self.ya / 2, self.ny)
+        self.dx = self.xa / (self.nx + 1)
+        self.dy = self.ya / (self.ny + 1)
+        self.geom = get_geom(self)  # calculate after x y
+
+
+@dataclass
+class JournalBearing(BaseBearing):
+    """Base class for journal bearing"""
+
+    case: str = "journal"
+    type: str = "seal"
+    csys: str = "cartesian"
+
+    xa: float = 50e-3 / 2  # radius
+    ya: float = 89e-3  # length
+    nx: int = 80
+    ny: int = 40
+    hp: float = 3e-3
+
+    c = 30e-6  # clearance (journal radius - shaft radius)
+
+    ps: float = 0.41e6
+
+    Qsc: float = 15 # L/min
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.psc = 0.41e6 + self.pa
+        self.theta = np.linspace(-np.pi, np.pi, self.nx)
+        self.x = self.xa * self.theta
+        self.y = np.linspace(-self.ya / 2, self.ya / 2, self.ny)
+        self.dx = 2 * np.pi * self.xa / (self.nx)
+        self.dy = self.ya / (self.ny)
+
+        self.ha_min = 0.01e-6
+        self.ha_max = self.c / 2 - 1e-6
+        e_min = self.ha_min
+        e_max = self.ha_max
+        self.e = np.linspace(e_min, e_max, self.nh)
+        self.clearance = self.xa - np.sqrt(
+            (self.xa - self.c / 2) ** 2
+            + self.e[None, None, :] ** 2
+            + 2
+            * self.e[None, None, :]
+            * (self.xa - self.c / 2)
+            * np.cos(self.theta[:, None, None])
+        )
+        # import matplotlib.pyplot as plt
+        # plt.plot(self.theta, np.squeeze(self.clearance) * 1e6)
+        # plt.plot(self.theta, np.cos(self.theta))
+        # print(sum(np.cos(self.theta)))
+        # plt.show()
+        print(self.dx*self.nx)
         self.geom = get_geom(self)  # calculate after x y
