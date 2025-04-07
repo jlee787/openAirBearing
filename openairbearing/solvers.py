@@ -272,6 +272,7 @@ def get_pressure_2d_numeric(bearing):
                 "north": b.pa,
                 "south": b.pa,
             }
+            factors = [1, 1]
         elif b.case == "circular":
             bc = {
                 "west": "Neumann",
@@ -285,6 +286,7 @@ def get_pressure_2d_numeric(bearing):
                 "north": b.pa,
                 "south": b.pa,
             }
+            factors[b.x, b.x**2]
         elif b.case == "annular":
             bc = {
                 "west": "Dirichlet",
@@ -296,6 +298,7 @@ def get_pressure_2d_numeric(bearing):
                 "west": b.pa,
                 "east": b.pc,
             }
+            factors[b.x, b.x**2]
         elif b.case == "journal":
             bc = {
                 "west": "Dirichlet",
@@ -307,6 +310,7 @@ def get_pressure_2d_numeric(bearing):
                 "west": b.pa,
                 "east": b.pc,
             }
+            factors = [b.xa**2, 1]
 
         p[:, :, i] = fdm_2d(
             epsilon=epsilon,
@@ -318,6 +322,7 @@ def get_pressure_2d_numeric(bearing):
             bc_vals=bc_vals,
             N=N,
             M=M,
+            factors=factors,
         )
     return p
 
@@ -332,6 +337,7 @@ def fdm_2d(
     bc_vals: dict,
     N: int,
     M: int,
+    factors: list = [1, 1],
 ) -> np.ndarray:
     """
     Solve air gap pressure in 2D using a finite difference scheme.
@@ -353,6 +359,8 @@ def fdm_2d(
     """
     # Number of unknowns
     num_points = N * M
+    fx = factors[0]
+    fy = factors[1]
 
     # Create sparse matrix and right-hand side
     A = sp.lil_matrix((num_points, num_points))
@@ -393,14 +401,14 @@ def fdm_2d(
 
             # Coefficients for the 5-point stencil
             center = (
-                -(eps_w[i, j] + eps_e[i, j]) / dx**2
-                - (eps_n[i, j] + eps_s[i, j]) / dy**2
+                -(eps_w[i, j] + eps_e[i, j]) / (dy**2 * fy)
+                - (eps_n[i, j] + eps_s[i, j]) / (dx**2 * fx)
                 + porous_source[i, j]
             )
-            west = eps_w[i, j] / dx**2
-            east = eps_e[i, j] / dx**2
-            north = eps_n[i, j] / dy**2
-            south = eps_s[i, j] / dy**2
+            west = eps_w[i, j] / (dy**2 * fy)
+            east = eps_e[i, j] / (dy**2 * fy)
+            north = eps_n[i, j] / (dx**2 * fx)
+            south = eps_s[i, j] / (dx**2 * fx)
 
             # center point
             A[row, row] = center
@@ -477,5 +485,3 @@ def fdm_2d(
     p_flat = spla.spsolve(A, b) ** 0.5
     p = p_flat.reshape((N, M)).T
     return p
-
-

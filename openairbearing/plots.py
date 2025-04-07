@@ -170,7 +170,7 @@ def plot_key_results(bearing, results):
             fig.add_trace(
                 go.Contour(
                     z=pressures[:, :, k_max_idx],
-                    x=b.x * 1e3,
+                    x=b.theta if b.case == "journal" else b.x * 1e3,
                     y=b.y * 1e3,
                     colorscale="Viridis",
                     zmin=0,
@@ -194,13 +194,20 @@ def plot_key_results(bearing, results):
                 row=1,
                 col=3,
             )
-
-            fig.update_xaxes(
-                title_text="x (mm)",
-                range=[b.x.min() * 1e3, b.x.max() * 1e3],
-                row=1,
-                col=3,
-            )
+            if b.case == "journal":
+                fig.update_xaxes(
+                    title_text="theta (rad)",
+                    range=[b.theta.min(), b.theta.max()],
+                    row=1,
+                    col=3,
+                )
+            else:
+                fig.update_xaxes(
+                    title_text="x (mm)",
+                    range=[b.x.min() * 1e3, b.x.max() * 1e3],
+                    row=1,
+                    col=3,
+                )
 
             fig.update_yaxes(
                 title_text="y (mm)",

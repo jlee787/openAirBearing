@@ -160,25 +160,25 @@ class JournalBearing(BaseBearing):
     type: str = "seal"
     csys: str = "cartesian"
 
-    xa: float = 50e-3 / 2  # radius
+    xa: float = 50.02e-3 / 2  # radius
     ya: float = 89e-3  # length
     nx: int = 80
-    ny: int = 40
+    ny: int = 50
     hp: float = 3e-3
 
-    c = 30e-6  # clearance (journal radius - shaft radius)
+    c = 40e-6  # clearance (journal radius - shaft radius)
 
     ps: float = 0.41e6
 
-    Qsc: float = 15 # L/min
+    Qsc: float = 15  # L/min
 
     def __post_init__(self):
         super().__post_init__()
         self.psc = 0.41e6 + self.pa
         self.theta = np.linspace(-np.pi, np.pi, self.nx)
-        self.x = self.xa * self.theta
+        self.x = self.theta
         self.y = np.linspace(-self.ya / 2, self.ya / 2, self.ny)
-        self.dx = 2 * np.pi * self.xa / (self.nx)
+        self.dx = 2 * np.pi / (self.nx + 1)
         self.dy = self.ya / (self.ny)
 
         self.ha_min = 0.01e-6
@@ -197,7 +197,6 @@ class JournalBearing(BaseBearing):
         # import matplotlib.pyplot as plt
         # plt.plot(self.theta, np.squeeze(self.clearance) * 1e6)
         # plt.plot(self.theta, np.cos(self.theta))
-        # print(sum(np.cos(self.theta)))
         # plt.show()
-        print(self.dx*self.nx)
+        # print(self.dx*self.nx)
         self.geom = get_geom(self)  # calculate after x y

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # # plot bearing shape
     figure = ab.plot_bearing_shape(bearing)
     figure.show()
-    
+
     # solve with analytic and numeric methods
     result = ab.solve_bearing(bearing, "numeric2d")
 

@@ -179,7 +179,7 @@ def get_dA(bearing) -> np.ndarray:
                 dy = b.y - np.insert(b.y[:-1], 0, 0)
                 dA = 0.5 * dx2[None, :] * dy[:, None]
             case "cartesian":
-                dA = b.dx * b.dy 
+                dA = b.dx * b.dy
             case _:
                 raise ValueError("Error: invalid csys in dA calculation")
     return dA
@@ -198,7 +198,7 @@ def get_load_capacity(bearing, p: np.ndarray) -> np.ndarray:
     b = bearing
     p_rel = p - b.pa
     if b.case == "journal":
-        w_x = p_rel * np.cos(b.theta)[None, :, None] * b.dx * b.dx
+        w_x = p_rel * np.cos(b.theta)[None, :, None] * b.xa * b.dx * b.dy
         w = np.sum(w_x, axis=(0, 1))
     elif p.ndim == 2:
         ny = b.ny
@@ -252,7 +252,6 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                 h = b.ha
             case "numeric":
                 h = b.ha + b.geom[:, None]
-            
 
         match b.csys:
             case "polar":
@@ -327,7 +326,7 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                         * h**3
                         * b.rho
                         * np.gradient(p**2, axis=1)
-                        * b.dx
+                        * b.dy
                         / (12 * b.mu * b.pa * b.dx)
                     )
                     qy = (
@@ -336,11 +335,11 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                         * b.rho
                         * np.gradient(p**2, axis=0)
                         * b.dx
+                        * b.xa
                         / (12 * b.mu * b.pa * b.dy)
                     )
-
                     qa = np.sum(qy[-1, :, :], axis=(0))
-                    qc = np.sum(qy[1, :, :], axis=(0))
+                    qc = np.sum(qy[0, :, :], axis=(0))
             case _:
                 qa, qc = 0, 0
 
