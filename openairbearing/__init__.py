@@ -32,7 +32,16 @@ from .utils import (
 from .solvers import solve_bearing
 
 # Import visualization functions
-from .plots import plot_bearing_shape, plot_key_results
+from .plots import (
+    plot_bearing_shape,
+    plot_key_results,
+    plot_load_capacity,
+    plot_stiffness,
+    plot_pressure_distribution,
+    plot_supply_flow_rate,
+    plot_chamber_flow_rate,
+    plot_ambient_flow_rate,
+)
 
 # Import app
 from .app.app import app
@@ -62,4 +71,10 @@ __all__ = [
     # Visualization
     "plot_bearing_shape",
     "plot_key_results",
+    "plot_load_capacity",
+    "plot_stiffness",
+    "plot_pressure_distribution",
+    "plot_supply_flow_rate",
+    "plot_chamber_flow_rate",
+    "plot_ambient_flow_rate",
 ]

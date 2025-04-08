@@ -1,6 +1,6 @@
 from dash import html, dcc
 
-from openairbearing.plots import plot_bearing_shape, plot_key_results
+from openairbearing.plots import plot_bearing_shape, plot_key_results, empty_figure
 from openairbearing.config import DEMO_MODE
 
 
@@ -567,7 +567,46 @@ def create_results_layout(bearing, results):
     Args:
         bearing: Bearing instance
         results: List of calculation results
+
+    Returns:
+        html.Div: Results layout with plots arranged in a grid.
     """
+    # Get the list of plots from plot_key_results
+    plot_figures = plot_key_results(bearing, results)
+
+    # Pad the list to ensure it has a multiple of 3 elements
+    while len(plot_figures) % 3 != 0:
+        plot_figures.append(empty_figure())
+    # Create rows of plots (3 plots per row)
+    rows = []
+    for i in range(0, len(plot_figures), 3):
+        row = html.Div(
+            [
+                html.Div(
+                    dcc.Graph(
+                        id=f"plot-{j}",
+                        figure=plot_figures[j],
+                        config={"displayModeBar": False},
+                        style={"height": "400px"},
+                    ),
+                    style={
+                        "width": "calc(33% - 20px)",
+                        "margin": "10px",
+                        "padding": "10px",
+                    },
+                )
+                for j in range(
+                    i, min(i + 3, len(plot_figures))
+                )  # Add up to 3 plots per row
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-between",
+            },  # Flexbox for row layout
+        )
+        rows.append(row)
+
+    # Combine all rows into a single column
     return html.Div(
         [
             html.Div(
@@ -581,19 +620,54 @@ def create_results_layout(bearing, results):
                 ],
                 style=STYLES["plot_box"],
             ),
-            # Spacer
             html.Div(style={"height": "20px"}),
             html.Div(
                 [
-                    html.H3("Results", style={"margin": "0"}),
-                    dcc.Graph(
-                        id="bearing-plots",
-                        figure=plot_key_results(bearing, results),
-                        config={"displayModeBar": False},
+                    html.H3(
+                        "Results", style={"margin": "0 0 20px 0", "textAlign": "center"}
                     ),
+                    *rows,  # Add all rows to the layout
                 ],
                 style=STYLES["plot_box"],
             ),
         ],
-        style=STYLES["plot_column"],
+        style=STYLES["plot_column"],  # Style for the overall results section
     )
+
+
+# def create_results_layout(bearing, results):
+#     """Create the results section layout.
+
+#     Args:
+#         bearing: Bearing instance
+#         results: List of calculation results
+#     """
+#     return html.Div(
+#         [
+#             html.Div(
+#                 [
+#                     html.H3("Bearing shape", style={"margin": "0"}),
+#                     dcc.Graph(
+#                         id="bearing-shape",
+#                         figure=plot_bearing_shape(bearing),
+#                         config={"displayModeBar": False},
+#                     ),
+#                 ],
+#                 style=STYLES["plot_box"],
+#             ),
+#             # Spacer
+#             html.Div(style={"height": "20px"}),
+#             html.Div(
+#                 [
+#                     html.H3("Results", style={"margin": "0"}),
+#                     dcc.Graph(
+#                         id="bearing-plots",
+#                         figure=plot_key_results(bearing, results),
+#                         config={"displayModeBar": False},
+#                     ),
+#                 ],
+#                 style=STYLES["plot_box"],
+#             ),
+#         ],
+#         style=STYLES["plot_column"],
+#     )

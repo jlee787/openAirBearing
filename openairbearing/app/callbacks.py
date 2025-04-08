@@ -1,7 +1,8 @@
 from dash.dependencies import Input, Output
 import dash
 
-from openairbearing.plots import plot_bearing_shape, plot_key_results
+
+from openairbearing.plots import plot_bearing_shape, plot_key_results, empty_figure
 from openairbearing.bearings import (
     CircularBearing,
     AnnularBearing,
@@ -36,7 +37,7 @@ def register_callbacks(app):
     # Add callback to handle parameter updates
     @app.callback(
         [
-            Output("bearing-plots", "figure"),
+            *[Output(f"plot-{i}", "figure") for i in range(6)],
             Output("bearing-shape", "figure"),
             Output("kappa-input", "value", allow_duplicate=True),
             Output("Qsc-input", "value", allow_duplicate=True),
@@ -161,15 +162,23 @@ def register_callbacks(app):
             if "numeric2d" in solvers:
                 results.append(solve_bearing(b, soltype="numeric2d"))
 
+            plot_figures = plot_key_results(b, results)
+
             return (
-                plot_key_results(b, results),
+                *plot_figures + [empty_figure()] * (6 - len(plot_figures)),
                 plot_bearing_shape(b),
                 new_kappa,
                 new_Qsc,
             )
+
         except Exception as e:
             print(f"Error: {e}")
-            return dash.no_update, dash.no_update, dash.no_update, dash.no_update
+            return (
+                *[empty_figure() for _ in range(6)],
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+            )
 
     @app.callback(
         Output("pc-container", "style"),
