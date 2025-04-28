@@ -7,11 +7,6 @@ if __name__ == "__main__":
     # initialize circular bearing with parameters
     bearing = ab.JournalBearing()
 
-    # print(np.round(bearing.geom*1e6, 2))
-    # # plot bearing shape
-    # figure = ab.plot_bearing_shape(bearing)
-    # figure.show()
-
     # solve with analytic and numeric methods
     result = ab.solve_bearing(bearing, "numeric2d")
 
@@ -23,4 +18,4 @@ if __name__ == "__main__":
     # ab.plot_supply_flow_rate(bearing, result).show()
     # ab.plot_chamber_flow_rate(bearing, result).show()
     # ab.plot_ambient_flow_rate(bearing, result).show()
-    ab.plot_key_results(bearing, result).show()
+    # ab.plot_key_results(bearing, result).show()

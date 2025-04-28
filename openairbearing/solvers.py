@@ -136,9 +136,8 @@ def get_pressure_analytic_circular(bearing):
     return p
 
 
-def get_pressure_numeric(bearing):
+def get_pressure_numeric(bearing, ha=None, ps=None):
     b = bearing
-    p = np.zeros((len(b.x), len(b.ha)))
 
     # uniform kappa
     kappa = b.kappa * np.ones_like(b.x)
@@ -150,8 +149,17 @@ def get_pressure_numeric(bearing):
     # porous feeding terms
     porous_source = -kappa / (2 * b.hp * b.mu)
 
-    for i in range(len(b.ha)):
-        h = b.ha[i] + b.geom
+    if ha is None:
+        ha = b.ha
+    else:
+        ha = np.atleast_1d(ha)
+    if ps is None:
+        ps = b.ps
+
+    p = np.zeros((len(b.x), len(ha)))
+
+    for i in range(len(ha)):
+        h = ha[i] + b.geom
 
         if b.csys == "polar":
             epsilon = (1 + b.Psi) * b.x * h**3 / (24 * b.mu)
@@ -163,7 +171,7 @@ def get_pressure_numeric(bearing):
         diff_mat = build_diff_matrix(coefficient, epsilon, b.dx)
         A = sp.lil_matrix(diff_mat + sp.diags(porous_source, 0))
 
-        f = b.ps**2 * porous_source
+        f = ps**2 * porous_source
 
         # Boundary conditions
         if b.type == "bearing":

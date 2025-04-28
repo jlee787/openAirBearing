@@ -49,6 +49,17 @@ def plot_key_results(bearing, results):
     return figs
 
 
+def plot_bearing_shape(bearing):
+    """Plot bearing shapes."""
+    figs = []
+    b = bearing
+
+    figs.append(plot_xy_shape(b))
+    figs.append(plot_xz_shape(b))
+
+    return figs
+
+
 def plot_load_capacity(bearing, results):
     """Plot the load capacity."""
     results = [results] if not isinstance(results, list) else results
@@ -332,37 +343,38 @@ def plot_ambient_flow_rate(bearing, results):
     return fig
 
 
-def plot_bearing_shape(bearing):
-    """Create bearing shape visualization
+# def plot_bearing_shape(bearing):
+#     """Create bearing shape visualization
 
-    Args:
-        bearing: Bearing instance with geometry parameters
-    """
-    b = bearing
-    # Create figure
-    # fig = go.Figure()
-    fig = sp.make_subplots(rows=1, cols=2, subplot_titles=("XY Geometry", "XZ Profile"))
+#     Args:
+#         bearing: Bearing instance with geometry parameters
+#     """
+#     b = bearing
+#     # Create figure
+#     # fig = go.Figure()
+#     fig = sp.make_subplots(rows=1, cols=2, subplot_titles=("XY Geometry", "XZ Profile"))
 
-    plot_xz_shape(b, fig)
-    plot_xy_shape(b, fig)
+#     plot_xz_shape(b, fig)
+#     plot_xy_shape(b, fig)
 
-    for i in range(1, 3):
-        fig.update_xaxes(AXIS_STYLE, row=1, col=i)
-        fig.update_yaxes(AXIS_STYLE, row=1, col=i)
+#     for i in range(1, 3):
+#         fig.update_xaxes(AXIS_STYLE, row=1, col=i)
+#         fig.update_yaxes(AXIS_STYLE, row=1, col=i)
 
-    fig.update_layout(
-        font=PLOT_FONT,
-        height=300,
-        showlegend=True,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=20, r=20, t=20, b=20),
-        legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5),
-    )
-    return fig
+#     fig.update_layout(
+#         font=PLOT_FONT,
+#         height=300,
+#         showlegend=True,
+#         plot_bgcolor="white",
+#         paper_bgcolor="white",
+#         margin=dict(l=20, r=20, t=20, b=20),
+#         legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5),
+#     )
+#     return fig
 
 
-def plot_xy_shape(bearing, fig):
+def plot_xy_shape(bearing):
+    fig = go.Figure()
     b = bearing
     # SHAPE XY
     match b.case:
@@ -382,8 +394,6 @@ def plot_xy_shape(bearing, fig):
                     name="Shape",
                     showlegend=False,
                 ),
-                row=1,
-                col=1,
             )
 
             # inner hole
@@ -400,8 +410,6 @@ def plot_xy_shape(bearing, fig):
                         name="Shape",
                         showlegend=False,
                     ),
-                    row=1,
-                    col=1,
                 )
 
             # symmetry lines
@@ -413,8 +421,6 @@ def plot_xy_shape(bearing, fig):
                     line=dict(color="gray", width=1, dash="dashdot"),
                     showlegend=False,
                 ),
-                row=1,
-                col=1,
             )
             fig.add_trace(
                 go.Scatter(
@@ -424,8 +430,6 @@ def plot_xy_shape(bearing, fig):
                     line=dict(color="gray", width=1, dash="dashdot"),
                     showlegend=False,
                 ),
-                row=1,
-                col=1,
             )
 
         case "infinite":
@@ -439,8 +443,6 @@ def plot_xy_shape(bearing, fig):
                     name="Shape",
                     showlegend=False,
                 ),
-                row=1,
-                col=1,
             )
             # left edge
             fig.add_trace(
@@ -454,11 +456,9 @@ def plot_xy_shape(bearing, fig):
                     name="Shape",
                     showlegend=False,
                 ),
-                row=1,
-                col=1,
             )
 
-            fig.update_yaxes(range=[0, 1000], row=1, col=1)
+            fig.update_yaxes(range=[0, 1000])
 
             fig.update_xaxes(
                 range=np.array([-0.5, 1.5]) * b.xa * 1e3,
@@ -476,8 +476,6 @@ def plot_xy_shape(bearing, fig):
                     name="Shape",
                     showlegend=False,
                 ),
-                row=1,
-                col=1,
             )
             fig.update_yaxes(
                 range=np.array([-0.6, 0.6]) * b.ya * 1e3,
@@ -491,24 +489,20 @@ def plot_xy_shape(bearing, fig):
         case _:
             pass
 
-    fig.update_xaxes(
-        title="x (mm)", showline=True, linecolor="black", mirror=True, row=1, col=1
-    )
+    fig.update_xaxes(title="x (mm)", **AXIS_STYLE)
     fig.update_yaxes(
         title="y (mm)",
-        showline=True,
-        linecolor="black",
-        mirror=True,
         scaleanchor=False if b.csys == "cartesian" else "x",
         scaleratio=1,
-        row=1,
-        col=1,
+        **AXIS_STYLE,
     )
+    fig.update_layout(title="XY profile", **FIG_LAYOUT)
     return fig
 
 
-def plot_xz_shape(bearing, fig):
+def plot_xz_shape(bearing):
     b = bearing
+    fig = go.Figure()
 
     if b.ny > 1:
         if b.case == "circular" or b.case == "annular":
@@ -530,15 +524,11 @@ def plot_xz_shape(bearing, fig):
                 title_text="x (mm)",
                 range=np.array([-1.1, 1.1]) * b.xa * 1e3,
                 scaleanchor="y",
-                row=1,
-                col=2,
             )
 
             fig.update_yaxes(
                 title_text="y (mm)",
                 range=np.array([-1.1, 1.1]) * b.xa * 1e3,
-                row=1,
-                col=2,
             )
 
         elif b.case == "rectangular":
@@ -548,14 +538,10 @@ def plot_xz_shape(bearing, fig):
             fig.update_xaxes(
                 title_text="x (mm)",
                 range=np.array([-0.6, 0.6]) * b.xa * 1e3,
-                row=1,
-                col=2,
             )
             fig.update_yaxes(
                 title_text="y (mm)",
                 range=np.array([-0.6, 0.6]) * b.ya * 1e3,
-                row=1,
-                col=2,
             )
         elif b.case == "journal":
             z = b.geom.T
@@ -564,14 +550,12 @@ def plot_xz_shape(bearing, fig):
             fig.update_xaxes(
                 title_text="theta (rad)",
                 range=np.array([-1.1, 1.1]) * np.pi,
-                row=1,
-                col=2,
+                **AXIS_STYLE,
             )
             fig.update_yaxes(
                 title_text="y (mm)",
                 range=np.array([-0.6, 0.6]) * b.ya * 1e3,
-                row=1,
-                col=2,
+                **AXIS_STYLE,
             )
 
         fig.add_trace(
@@ -590,8 +574,6 @@ def plot_xz_shape(bearing, fig):
                 colorbar=dict(title="(μm)", thickness=15),
                 name="Profile",
             ),
-            row=1,
-            col=2,
         )
 
     else:
@@ -643,8 +625,6 @@ def plot_xz_shape(bearing, fig):
                 name="Bearing",
                 showlegend=True,
             ),
-            row=1,
-            col=2,
         )
 
         # Guide surface XZ
@@ -666,8 +646,6 @@ def plot_xz_shape(bearing, fig):
                 name="Shape",
                 showlegend=False,
             ),
-            row=1,
-            col=2,
         )
 
         # symmetry line
@@ -680,22 +658,19 @@ def plot_xz_shape(bearing, fig):
                     line=dict(color="gray", width=1, dash="dashdot"),
                     showlegend=False,
                 ),
-                row=1,
-                col=2,
             )
 
         fig.update_xaxes(
             title="x (mm)",
             range=[(x[-1] - x[-1] * 1.1 if x[1] == 0 else x[1] * 1.1), x[-1] * 1.1],
-            row=1,
-            col=2,
+            **AXIS_STYLE,
         )
         fig.update_yaxes(
             title="Shape (μm)",
             range=[-0.5 - 0.3e6 * abs(b.error), 1 + np.max(b.geom) * 1e6],
-            row=1,
-            col=2,
+            **AXIS_STYLE,
         )
+        fig.update_layout(title="XZ profile", **FIG_LAYOUT)
     return fig
 
 

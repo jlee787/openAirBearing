@@ -29,7 +29,7 @@ from .utils import (
 )
 
 # Import solver function
-from .solvers import solve_bearing
+from .solvers import solve_bearing, get_pressure_numeric
 
 # Import visualization functions
 from .plots import (
@@ -66,6 +66,7 @@ __all__ = [
     "Result",
     # Solver
     "solve_bearing",
+    "get_pressure_numeric",
     # Configuration
     "DEMO_MODE",
     # Visualization

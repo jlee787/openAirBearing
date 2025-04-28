@@ -37,8 +37,8 @@ def register_callbacks(app):
     # Add callback to handle parameter updates
     @app.callback(
         [
-            *[Output(f"plot-{i}", "figure") for i in range(6)],
-            Output("bearing-shape", "figure"),
+            *[Output(f"shape-plot-{i}", "figure") for i in range(3)],
+            *[Output(f"result-plot-{i}", "figure") for i in range(6)],
             Output("kappa-input", "value", allow_duplicate=True),
             Output("Qsc-input", "value", allow_duplicate=True),
         ],
@@ -162,11 +162,12 @@ def register_callbacks(app):
             if "numeric2d" in solvers:
                 results.append(solve_bearing(b, soltype="numeric2d"))
 
+            shape_figures = plot_bearing_shape(b)
             plot_figures = plot_key_results(b, results)
 
             return (
+                *shape_figures + [empty_figure()] * (3 - len(shape_figures)),
                 *plot_figures + [empty_figure()] * (6 - len(plot_figures)),
-                plot_bearing_shape(b),
                 new_kappa,
                 new_Qsc,
             )
@@ -174,6 +175,7 @@ def register_callbacks(app):
         except Exception as e:
             print(f"Error: {e}")
             return (
+                *[empty_figure() for _ in range(3)],
                 *[empty_figure() for _ in range(6)],
                 dash.no_update,
                 dash.no_update,

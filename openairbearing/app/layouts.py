@@ -572,19 +572,49 @@ def create_results_layout(bearing, results):
         html.Div: Results layout with plots arranged in a grid.
     """
     # Get the list of plots from plot_key_results
+    shape_figures = plot_bearing_shape(bearing)
     plot_figures = plot_key_results(bearing, results)
 
     # Pad the list to ensure it has a multiple of 3 elements
+    while len(shape_figures) % 3 != 0:
+        shape_figures.append(empty_figure())
     while len(plot_figures) % 3 != 0:
         plot_figures.append(empty_figure())
     # Create rows of plots (3 plots per row)
-    rows = []
+    shape_rows = []
+    for i in range(0, len(shape_figures), 3):
+        row = html.Div(
+            [
+                html.Div(
+                    dcc.Graph(
+                        id=f"shape-plot-{j}",
+                        figure=shape_figures[j],
+                        config={"displayModeBar": False},
+                        style={"height": "400px"},
+                    ),
+                    style={
+                        "width": "calc(33% - 20px)",
+                        "margin": "10px",
+                        "padding": "10px",
+                    },
+                )
+                for j in range(
+                    i, min(i + 3, len(shape_figures))
+                )  # Add up to 3 plots per row
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-between",
+            },  # Flexbox for row layout
+        )
+        shape_rows.append(row)
+    result_rows = []
     for i in range(0, len(plot_figures), 3):
         row = html.Div(
             [
                 html.Div(
                     dcc.Graph(
-                        id=f"plot-{j}",
+                        id=f"result-plot-{j}",
                         figure=plot_figures[j],
                         config={"displayModeBar": False},
                         style={"height": "400px"},
@@ -604,19 +634,18 @@ def create_results_layout(bearing, results):
                 "justifyContent": "space-between",
             },  # Flexbox for row layout
         )
-        rows.append(row)
+        result_rows.append(row)
 
     # Combine all rows into a single column
     return html.Div(
         [
             html.Div(
                 [
-                    html.H3("Bearing shape", style={"margin": "0"}),
-                    dcc.Graph(
-                        id="bearing-shape",
-                        figure=plot_bearing_shape(bearing),
-                        config={"displayModeBar": False},
+                    html.H3(
+                        "Bearing shape",
+                        style={"margin": "0 0 20px 0", "textAlign": "left"},
                     ),
+                    *shape_rows,
                 ],
                 style=STYLES["plot_box"],
             ),
@@ -624,9 +653,9 @@ def create_results_layout(bearing, results):
             html.Div(
                 [
                     html.H3(
-                        "Results", style={"margin": "0 0 20px 0", "textAlign": "center"}
+                        "Results", style={"margin": "0 0 20px 0", "textAlign": "left"}
                     ),
-                    *rows,  # Add all rows to the layout
+                    *result_rows,
                 ],
                 style=STYLES["plot_box"],
             ),
