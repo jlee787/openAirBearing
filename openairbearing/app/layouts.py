@@ -587,9 +587,9 @@ def create_results_layout(bearing, results):
                         style={"height": "400px"},
                     ),
                     style={
-                        "width": "calc(33% - 20px)",
-                        "margin": "10px",
-                        "padding": "10px",
+                        "width": "33%",
+                        "margin": "0px",
+                        "padding": "0px",
                     },
                 )
                 for j in range(
@@ -616,7 +616,7 @@ def create_results_layout(bearing, results):
                     style={
                         "width": "calc(33% - 20px)",
                         "margin": "10px",
-                        "padding": "10px",
+                        "padding": "0px",
                     },
                 )
                 for j in range(
@@ -657,40 +657,3 @@ def create_results_layout(bearing, results):
         style=STYLES["plot_column"],  # Style for the overall results section
     )
 
-
-# def create_results_layout(bearing, results):
-#     """Create the results section layout.
-
-#     Args:
-#         bearing: Bearing instance
-#         results: List of calculation results
-#     """
-#     return html.Div(
-#         [
-#             html.Div(
-#                 [
-#                     html.H3("Bearing shape", style={"margin": "0"}),
-#                     dcc.Graph(
-#                         id="bearing-shape",
-#                         figure=plot_bearing_shape(bearing),
-#                         config={"displayModeBar": False},
-#                     ),
-#                 ],
-#                 style=STYLES["plot_box"],
-#             ),
-#             # Spacer
-#             html.Div(style={"height": "20px"}),
-#             html.Div(
-#                 [
-#                     html.H3("Results", style={"margin": "0"}),
-#                     dcc.Graph(
-#                         id="bearing-plots",
-#                         figure=plot_key_results(bearing, results),
-#                         config={"displayModeBar": False},
-#                     ),
-#                 ],
-#                 style=STYLES["plot_box"],
-#             ),
-#         ],
-#         style=STYLES["plot_column"],
-#     )

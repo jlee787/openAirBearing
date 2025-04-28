@@ -31,6 +31,7 @@ FIG_LAYOUT = dict(
     paper_bgcolor="white",
     legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5),
     showlegend=True,
+    margin=dict(l=10, r=10, t=10, b=10), 
 )
 
 
@@ -133,6 +134,18 @@ def plot_pressure_distribution(bearing, results):
         idx_k_max = np.argmax(result.k)
 
         if result.p.ndim == 2:
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=[None], 
+                    y=[None],
+                    mode="lines", 
+                    line=dict(color=color),
+                    name=result.name, 
+                    showlegend=True, 
+                )
+            )
+
             n_plots = 3
             # h_plots = np.linspace(b.ha_min**0.5, b.ha_max**0.5, n_plots) ** 2
             in_h = [1, idx_k_max, b.nh - 1]
@@ -392,7 +405,7 @@ def plot_xy_shape(bearing):
                     fillcolor="lightgrey",
                     line=dict(color="black"),
                     name="Shape",
-                    showlegend=False,
+                    showlegend=True,
                 ),
             )
 
