@@ -83,7 +83,10 @@ def test_solve_bearing():
         AnnularBearing(**par),
         InfiniteLinearBearing(**par),
     ]:
-        results = [solve_bearing(bearing, "analytic"), solve_bearing(bearing, "numeric")]
+        results = [
+            solve_bearing(bearing, "analytic"),
+            solve_bearing(bearing, "numeric"),
+        ]
         e = 0.05
         assert np.allclose(results[0].p, results[1].p, rtol=e)
         assert np.allclose(results[0].w, results[1].w, rtol=e)
