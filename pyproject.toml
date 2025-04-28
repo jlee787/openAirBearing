@@ -35,5 +35,8 @@ openairbearing = "openairbearing.app.app:main"
 [tool.setuptools.packages.find]
 exclude = ["examples*", "tests*"]
 
+[tool.setuptools.dynamic]
+version = {attr = "openairbearing.__version__"}
+
 [tool.setuptools.package-data]
 openairbearing = ["assets/style.css", "assets/favicon.ico"]
