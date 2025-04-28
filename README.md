@@ -20,6 +20,31 @@ Analytical and numerical solutions of the Reynolds equation in one dimension for
 Analytical solutions assume ideal geometry, numerical (finite difference method) solutions consider uneven gap height, uneven permeability, and slip at porous-gap interface.
 Implements models from textbooks [1,2] and research of Miettinen et al. [3,4].
 
+## Installation
+
+Python is required to use OpenAirBearing. You can install Python from the official website (https://www.python.org/).
+OpenAirBearing can be installed using the Python package installer ``pip`` (https://pypi.org/project/pip/)::
+
+    pip install openairbearing
+    
+Alternatively, ``git`` can be used to clone the repository:
+    
+    git clone https://github.com/Aalto-Arotor/openTorsion.git
+    
+This creates a folder *openairbearing* containing the OpenAirBearing source code.
+
+## Quickstart
+
+OpenAirbearing userinterface can be accessed with the following:
+
+    python3
+    from openairbearing import app
+    app.run()
+
+This lauches the Dash application, which can be accessed at:
+
+    http://127.0.0.1:8050
+
 ## Contact
 Main developer is Mikael Miettinen from Arotor lab at Aalto University Finland.
 
