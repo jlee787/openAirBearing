@@ -31,7 +31,7 @@ FIG_LAYOUT = dict(
     paper_bgcolor="white",
     legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5),
     showlegend=True,
-    margin=dict(l=10, r=10, t=10, b=10), 
+    margin=dict(l=10, r=10, t=10, b=10),
 )
 
 
@@ -134,15 +134,15 @@ def plot_pressure_distribution(bearing, results):
         idx_k_max = np.argmax(result.k)
 
         if result.p.ndim == 2:
-            
+
             fig.add_trace(
                 go.Scatter(
-                    x=[None], 
+                    x=[None],
                     y=[None],
-                    mode="lines", 
+                    mode="lines",
                     line=dict(color=color),
-                    name=result.name, 
-                    showlegend=True, 
+                    name=result.name,
+                    showlegend=True,
                 )
             )
 

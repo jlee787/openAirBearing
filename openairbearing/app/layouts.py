@@ -656,4 +656,3 @@ def create_results_layout(bearing, results):
         ],
         style=STYLES["plot_column"],  # Style for the overall results section
     )
-

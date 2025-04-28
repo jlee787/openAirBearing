@@ -4,7 +4,7 @@ This package provides tools for analyzing and visualizing air bearing performanc
 """
 
 # Version information
-__version__ = "0.1.3"
+__version__ = "0.1.8"
 
 # Import constants from config (where they're actually defined)
 from .config import DEMO_MODE
