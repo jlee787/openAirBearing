@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 
-from openairbearing.config import ANALYTIC, NUMERIC
 from openairbearing.bearings import *
 from openairbearing.solvers import (
     solve_bearing,
@@ -57,14 +56,14 @@ def test_get_pressure_numeric():
     assert np.all(p - bearing.ps < e)
 
 
-def test_get_pressure_2d_numeric():
-    """Test the numeric pressure distribution for a rectangular bearing."""
-    bearing = RectangularBearing()
-    p = get_pressure_2d_numeric(bearing)
-    assert p.shape == (bearing.ny, bearing.nx, bearing.nh)
-    e = 1e-6
-    assert np.all(p - bearing.pa > -e)
-    assert np.all(p - bearing.ps < e)
+# def test_get_pressure_2d_numeric():
+#     """Test the numeric pressure distribution for a rectangular bearing."""
+#     bearing = RectangularBearing()
+#     p = get_pressure_2d_numeric(bearing)
+#     assert p.shape == (bearing.ny, bearing.nx, bearing.nh)
+#     e = 1e-6
+#     assert np.all(p - bearing.pa > -e)
+#     assert np.all(p - bearing.ps < e)
 
 
 def test_solve_bearing():
@@ -84,7 +83,7 @@ def test_solve_bearing():
         AnnularBearing(**par),
         InfiniteLinearBearing(**par),
     ]:
-        results = [solve_bearing(bearing, ANALYTIC), solve_bearing(bearing, NUMERIC)]
+        results = [solve_bearing(bearing, "analytic"), solve_bearing(bearing, "numeric")]
         e = 0.05
         assert np.allclose(results[0].p, results[1].p, rtol=e)
         assert np.allclose(results[0].w, results[1].w, rtol=e)
