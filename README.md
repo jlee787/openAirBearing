@@ -23,7 +23,8 @@ Implements models from textbooks [1,2] and research of Miettinen et al. [3,4].
 ## Installation
 
 Python is required to use OpenAirBearing. You can install Python from the official website (https://www.python.org/).
-OpenAirBearing can be installed using the Python package installer ``pip`` (https://pypi.org/project/pip/)::
+
+OpenAirBearing can be installed using the Python package installer ``pip`` (https://pypi.org/project/pip/):
 
     pip install openairbearing
     
