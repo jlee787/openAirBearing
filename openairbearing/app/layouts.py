@@ -161,23 +161,15 @@ def create_input_layout(default_bearing):
                         options=[
                             {"label": "Circular thrust", "value": "circular"},
                             {"label": "Annular thrust", "value": "annular"},
-                            {
-                                "label": "Infinitely long",
-                                "value": "infinite",
-                                "disabled": False,
-                            },
-                            {
-                                "label": "Rectangular",
-                                "value": "rectangular",
-                                "disabled": False,
-                            },
-                            {"label": "Journal", "value": "journal", "disabled": False},
+                            {"label": "Infinitely long", "value": "infinite"},
+                            {"label": "Rectangular", "value": "rectangular"},
+                            {"label": "Journal", "value": "journal", "disabled": True},
                         ],
                         value="circular",
                         style={"width": "150px"},
                     ),
                     html.Label(""),
-                    html.Label("Solution selection"),  # Fixed capitalization here
+                    html.Label("Solution selection"),
                     dcc.Checklist(
                         id="solver-select",
                         options=[
@@ -334,10 +326,12 @@ def create_input_layout(default_bearing):
                             {
                                 "label": "Tilt x",
                                 "value": "tiltx",
+                                "disabled": True,
                             },
                             {
                                 "label": "Tilt y",
                                 "value": "tilty",
+                                "disabled": True,
                             },
                         ],
                         value="linear",
