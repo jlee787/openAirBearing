@@ -37,6 +37,8 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/p/openairbearing 
+    permissions:
+      id-token: write
 
     steps:
     - name: Download distribution packages
