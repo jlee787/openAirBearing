@@ -18,8 +18,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "dash>=2.0.0,<3.0.0",
-    "numpy>=1.21.0,<2.0.0",
+    "dash>=2.18.2,<3.0.0",
+    "numpy>=2.2.3,<3.0.0",
     "plotly>=6.0.0,<7.0.0",
     "scipy>=1.7.0,<2.0.0",
 ]
