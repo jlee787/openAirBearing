@@ -87,7 +87,7 @@ def plot_load_capacity(bearing, results):
         )
 
     fig.update_xaxes(title_text="h (μm)", range=[0, b.ha_max * 1e6], **AXIS_STYLE)
-    fig.update_yaxes(title_text="w (N)", range=[0, None], **AXIS_STYLE)
+    fig.update_yaxes(title_text="w (N)", range=[None, None], **AXIS_STYLE)
     fig.update_layout(title="Load Capacity", **FIG_LAYOUT)
     return fig
 
@@ -118,7 +118,7 @@ def plot_stiffness(bearing, results):
         )
 
     fig.update_xaxes(title_text="h (μm)", range=[0, b.ha_max * 1e6], **AXIS_STYLE)
-    fig.update_yaxes(title_text="k (N/μm)", range=[0, None], **AXIS_STYLE)
+    fig.update_yaxes(title_text="k (N/μm)", range=[None, None], **AXIS_STYLE)
     fig.update_layout(title="Static stiffness", **FIG_LAYOUT)
     return fig
 
@@ -173,7 +173,7 @@ def plot_pressure_distribution(bearing, results):
                 fig.update_xaxes(
                     title_text="r (mm)", range=[0, b.xa * 1e3], **AXIS_STYLE
                 )
-                fig.update_yaxes(title_text="p (MPa)", range=[0, None], **AXIS_STYLE)
+                fig.update_yaxes(title_text="p (MPa)", range=[None, None], **AXIS_STYLE)
         else:
             pressures = (result.p - b.pa) * 1e-6  # Convert to MPa
             if b.case == "journal":
@@ -351,7 +351,7 @@ def plot_ambient_flow_rate(bearing, results):
         )
 
     fig.update_xaxes(title_text="h (μm)", range=[0, b.ha_max * 1e6], **AXIS_STYLE)
-    fig.update_yaxes(title_text="q<sub>a</sub> (L/min)", range=[0, None], **AXIS_STYLE)
+    fig.update_yaxes(title_text="q<sub>a</sub> (L/min)", range=[None, None], **AXIS_STYLE)
     fig.update_layout(title="ambient flow", **FIG_LAYOUT)
     return fig
 

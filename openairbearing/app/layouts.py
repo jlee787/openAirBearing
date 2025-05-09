@@ -378,7 +378,7 @@ def create_input_layout(default_bearing):
                         id="pa-input",
                         type="number",
                         value=default_bearing.pa * 1e-6,  # Convert Pa to MPa
-                        min=0,
+                        min=1e-6,
                         step=0.1,
                         inputMode="numeric",
                         style=STYLES["input"],
@@ -415,8 +415,8 @@ def create_input_layout(default_bearing):
                         id="pc-input",
                         type="number",
                         value=default_bearing.pc * 1e-6,  # Convert Pa to MPa
-                        min=0.1,
-                        step=0.1,
+                        min=0,
+                        step=0.01,
                         inputMode="numeric",
                         style=STYLES["input"],
                     ),
