@@ -31,7 +31,7 @@ OpenAirBearing can be installed using the Python package installer ``pip`` (http
     
 Alternatively, ``git`` can be used to clone the repository:
     
-    git clone https://github.com/Aalto-Arotor/openTorsion.git
+    git clone https://github.com/Aalto-Arotor/openAirBearing.git
     
 This creates a folder *openairbearing* containing the OpenAirBearing source code.
 
