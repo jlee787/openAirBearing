@@ -6,7 +6,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Aalto-Arotor/openairbearing/blob/main/LICENSE)
 
-## Introduciton
+## Introduction
 OpenAirbearing includes a backed to model porous bearing performance and a browser GUI to display the results.
 Software can be used online at https://www.openairbearing.com in a limited capability, and in full capability when used locally.
 
@@ -31,7 +31,7 @@ OpenAirBearing can be installed using the Python package installer ``pip`` (http
     
 Alternatively, ``git`` can be used to clone the repository:
     
-    git clone https://github.com/Aalto-Arotor/openTorsion.git
+    git clone https://github.com/Aalto-Arotor/openAirBearing.git
     
 This creates a folder *openairbearing* containing the OpenAirBearing source code.
 
