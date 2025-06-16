@@ -41,6 +41,8 @@ from .plots import (
     plot_supply_flow_rate,
     plot_chamber_flow_rate,
     plot_ambient_flow_rate,
+    plot_xy_shape,
+    plot_xz_shape,
 )
 
 # Import app

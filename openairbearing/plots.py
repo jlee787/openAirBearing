@@ -21,6 +21,7 @@ AXIS_STYLE = dict(
     title_font=PLOT_FONT,
     tickfont=PLOT_FONT,
     showline=True,
+    showgrid=False,
     linecolor="black",
     ticks="inside",
     mirror=True,
@@ -31,7 +32,7 @@ FIG_LAYOUT = dict(
     paper_bgcolor="white",
     legend=dict(orientation="h", yanchor="bottom", y=1.1, xanchor="center", x=0.5),
     showlegend=True,
-    margin=dict(l=10, r=10, t=10, b=10),
+    margin=dict(l=10, r=10, t=50, b=10),
 )
 
 
@@ -123,7 +124,7 @@ def plot_stiffness(bearing, results):
     return fig
 
 
-def plot_pressure_distribution(bearing, results):
+def plot_pressure_distribution(bearing, results, slider=True):
     """Plot the pressure distribution."""
     results = [results] if not isinstance(results, list) else results
     fig = go.Figure()
@@ -240,7 +241,6 @@ def plot_pressure_distribution(bearing, results):
                     label=f"{h:.1f} μm",
                 )
                 steps.append(step)
-
             sliders = [
                 dict(
                     active=idx_k_max,
@@ -252,7 +252,8 @@ def plot_pressure_distribution(bearing, results):
                     steps=steps,
                 )
             ]
-            fig.update_layout(sliders=sliders)
+            if slider:
+                fig.update_layout(sliders=sliders)
 
         fig.update_layout(title="Pressure distribution", **FIG_LAYOUT)
     return fig
@@ -492,11 +493,13 @@ def plot_xy_shape(bearing):
             )
             fig.update_yaxes(
                 range=np.array([-0.6, 0.6]) * b.ya * 1e3,
+                **AXIS_STYLE,
             )
             fig.update_xaxes(
                 range=np.array([-0.6, 0.6]) * b.xa * 1e3,
                 scaleanchor="y",
                 scaleratio=1,
+                **AXIS_STYLE,
             )
 
         case _:
@@ -550,11 +553,13 @@ def plot_xz_shape(bearing):
             y = b.y
             fig.update_xaxes(
                 title_text="x (mm)",
-                range=np.array([-0.6, 0.6]) * b.xa * 1e3,
+                range=np.array([-1, 1]) * 0.5 * b.xa * 1e3,
+                **AXIS_STYLE,
             )
             fig.update_yaxes(
                 title_text="y (mm)",
-                range=np.array([-0.6, 0.6]) * b.ya * 1e3,
+                range=np.array([-1, 1]) * 0.5 * b.ya * 1e3,
+                **AXIS_STYLE,
             )
         elif b.case == "journal":
             z = b.geom.T
@@ -588,6 +593,7 @@ def plot_xz_shape(bearing):
                 name="Profile",
             ),
         )
+        fig.update_layout(title="XYZ profile", **FIG_LAYOUT)
 
     else:
         # PROFILE XZ
