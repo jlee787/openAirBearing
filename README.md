@@ -1,4 +1,6 @@
-# OpenAirBearing: Open-Source porous gas bearing analysis
+<p align="center">
+  <img src="docs/OpenAirBearing.png" alt="OpenAirBearinglogo" width="60%">
+</p>
 
 [![PyPi Version](https://img.shields.io/pypi/v/openairbearing.svg)](https://pypi.org/project/openairbearing)
 [![Unit tests](https://github.com/Aalto-Arotor/openAirBearing/actions/workflows/unittests.yml/badge.svg)](https://github.com/Aalto-Arotor/openAirBearing/actions/workflows/unittests.yml)
@@ -6,6 +8,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Aalto-Arotor/openairbearing/blob/main/LICENSE)
 
+# OpenAirBearing: Open-Source porous gas bearing analysis
 ## Introduction
 OpenAirbearing includes a backed to model porous bearing performance and a browser GUI to display the results.
 Software can be used online at https://www.openairbearing.com in a limited capability, and in full capability when used locally.

@@ -352,7 +352,9 @@ def plot_ambient_flow_rate(bearing, results):
         )
 
     fig.update_xaxes(title_text="h (μm)", range=[0, b.ha_max * 1e6], **AXIS_STYLE)
-    fig.update_yaxes(title_text="q<sub>a</sub> (L/min)", range=[None, None], **AXIS_STYLE)
+    fig.update_yaxes(
+        title_text="q<sub>a</sub> (L/min)", range=[None, None], **AXIS_STYLE
+    )
     fig.update_layout(title="ambient flow", **FIG_LAYOUT)
     return fig
 
