@@ -258,7 +258,7 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                 q = (
                     -6e4
                     * h**3
-                    * b.rho
+                    
                     * np.gradient(p**2, axis=0)
                     * np.pi
                     * b.x[:, None]
@@ -268,9 +268,9 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                 q = (
                     -6e4
                     * h**3
-                    * b.rho
+                    
                     * np.gradient(p**2, axis=0)
-                    / (12 * b.mu * b.pa * b.dx[:, None])
+                    / (24 * b.mu * b.pa * b.dx[:, None])
                 )
             case _:
                 raise ValueError("Invalid csys")
@@ -286,9 +286,9 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                 qx = (
                     -6e4
                     * h**3
-                    * b.rho
+                    
                     * np.gradient(p**2, axis=1)
-                    / (2 * np.pi)
+                    / (2 * np.pi) #pi ?
                     * b.x[None, :, None]
                     * b.dy[:, None, None]
                     / (12 * b.mu * b.pa * b.dx[None, :, None])
@@ -301,18 +301,18 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                     qx = (
                         -6e4
                         * h**3
-                        * b.rho
+                        
                         * np.gradient(p**2, axis=1)
                         * b.dy
-                        / (12 * b.mu * b.pa * b.dx)
+                        / (24 * b.mu * b.pa * b.dx)
                     )
                     qy = (
                         -6e4
                         * h**3
-                        * b.rho
+                        
                         * np.gradient(p**2, axis=0)
                         * b.dx
-                        / (12 * b.mu * b.pa * b.dy)
+                        / (24 * b.mu * b.pa * b.dy)
                     )
 
                     qa = np.sum(np.abs(qx[:, (0, -1), :]), axis=(0, 1)) + np.sum(
@@ -324,7 +324,7 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                     qx = (
                         -6e4
                         * h**3
-                        * b.rho
+                        
                         * np.gradient(p**2, axis=1)
                         * b.dy
                         / (12 * b.mu * b.pa * b.dx)
@@ -332,7 +332,7 @@ def get_volumetric_flow(bearing, p: np.ndarray, soltype: str) -> tuple:
                     qy = (
                         -6e4
                         * h**3
-                        * b.rho
+                        
                         * np.gradient(p**2, axis=0)
                         * b.dx
                         * b.xa
