@@ -161,6 +161,8 @@ def register_callbacks(app):
                 results.append(solve_bearing(b, soltype="numeric"))
             if "numeric2d" in solvers:
                 results.append(solve_bearing(b, soltype="numeric2d"))
+            if "numericFem" in solvers:
+                results.append(solve_bearing(b, soltype="numericFem"))
 
             shape_figures = plot_bearing_shape(b)
             plot_figures = plot_key_results(b, results)
@@ -259,6 +261,8 @@ def register_callbacks(app):
                     "value": "numeric2d",
                     "disabled": True,
                 },
+
+                {"label": "Numeric FEM", "value": "numericFem", "disabled": False},
             ],
             "annular": [
                 {
@@ -276,6 +280,7 @@ def register_callbacks(app):
                     "value": "numeric2d",
                     "disabled": True,
                 },
+                {"label": "Numeric FEM", "value": "numericFem", "disabled": False},
             ],
             "infinite": [
                 {
@@ -293,6 +298,8 @@ def register_callbacks(app):
                     "value": "numeric2d",
                     "disabled": True,
                 },
+
+                {"label": "Numeric FEM", "value": "numericFem", "disabled": False},
             ],
             "rectangular": [
                 {
@@ -310,6 +317,8 @@ def register_callbacks(app):
                     "value": "numeric2d",
                     "disabled": False,
                 },
+
+                {"label": "Numeric FEM", "value": "numericFem", "disabled": False},
             ],
             "journal": [
                 {
@@ -327,6 +336,8 @@ def register_callbacks(app):
                     "value": "numeric2d",
                     "disabled": False,
                 },
+
+                {"label": "Numeric FEM", "value": "numericFem", "disabled": False},
             ],
         }
         # Default solver selections for each case
@@ -335,7 +346,8 @@ def register_callbacks(app):
             "annular": ["analytic"],
             "infinite": ["analytic"],
             "rectangular": ["numeric2d"],
-            "journal": ["numeric2d"],
+            #"journal": ["numeric2d"],
+            "journal": ["numericFem"],   # Journal default to FEM
         }
         # Get the solvers for the selected case
         solvers = case_solvers.get(case, [])
