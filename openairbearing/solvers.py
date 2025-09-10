@@ -12,6 +12,7 @@ from openairbearing.utils import (
     get_volumetric_flow,
 )
 
+from openairbearing.fem_solvers import solve_bearing_fem
 
 def solve_bearing(bearing, soltype: bool) -> Result:
     match soltype:
@@ -40,6 +41,13 @@ def solve_bearing(bearing, soltype: bool) -> Result:
         case "numeric2d":
             name = "numeric2d"
             p = get_pressure_2d_numeric(bearing)
+
+        case "numericFem":                                    # New FEM option
+            name = "numericFem"
+            p, W, qa, qc, qs, _ = solve_bearing_fem(bearing, return_artifacts=False)
+            k = get_stiffness(bearing=bearing, w=W)
+            return Result(name=name, p=p, w=W, k=k, qs=qs, qa=qa, qc=qc)
+        
         case _:
             raise ValueError("Invalid solution type")
 
