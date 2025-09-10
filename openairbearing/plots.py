@@ -14,6 +14,7 @@ SOLVER_COLORS = {
     "analytic": "blue",
     "numeric": "red",
     "numeric2d": "red",
+    "numericFem": "green",    # NEW FEM solver color
 }
 
 # Common axis properties
@@ -705,3 +706,4 @@ def empty_figure():
         margin=dict(l=0, r=0, t=0, b=0),
     )
     return fig
+
